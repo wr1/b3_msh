@@ -29,6 +29,26 @@ def test_from_xfoil():
     assert len(af.current_points) > 10  # Should have points
 
 
+def test_rotate():
+    """Test rotating the airfoil."""
+    points = np.array([[0, 0], [0.5, 0.1], [1, 0]])
+    af = Airfoil(points)
+    original_points = af.current_points.copy()
+    af.rotate(90)
+    assert not np.allclose(af.current_points, original_points)
+    assert af.rotation == 90
+
+
+def test_translate():
+    """Test translating the airfoil."""
+    points = np.array([[0, 0], [0.5, 0.1], [1, 0]])
+    af = Airfoil(points)
+    original_points = af.current_points.copy()
+    af.translate(1, 2, 3)
+    assert not np.allclose(af.current_points, original_points)
+    assert np.allclose(af.position, [1, 2, 3])
+
+
 def test_remesh():
     """Test remeshing."""
     points = np.array([[0, 0], [0.5, 0.1], [1, 0]])
