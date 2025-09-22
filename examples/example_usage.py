@@ -14,7 +14,7 @@ sw_te = ShearWeb({"type": "trailing_edge"})
 af.add_shear_web(sw_te)
 
 # Add shear web with n_elements
-sw_mesh = ShearWeb({"type": "plane", "origin": (0.3, 0.05, 0), "normal": (0, 1, 0)})
+sw_mesh = ShearWeb({"type": "plane", "origin": (0.3, 0.05, 0), "normal": (1, 0, 0)})
 af.add_shear_web(sw_mesh, n_elements=10)
 
 # Remesh with total points, using shear web refinement
