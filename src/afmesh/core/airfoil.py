@@ -123,9 +123,20 @@ class Airfoil:
         total_n_points=None,
         element_length=None,
         relative_refinement=None,
+        n_elements_per_panel=None,
     ):
         """Remesh the airfoil."""
-        if relative_refinement is None and self.shear_web_refinements:
+        if n_elements_per_panel is not None:
+            panels = self.get_panels()
+            if len(n_elements_per_panel) != len(panels):
+                raise ValueError("n_elements_per_panel must match number of panels")
+            t_vals = []
+            for (t_start, t_end), n_elem in zip(panels, n_elements_per_panel):
+                t_panel = np.linspace(t_start, t_end, n_elem + 1)
+                t_vals.extend(t_panel[:-1])  # Avoid duplicating end points
+            t_vals.append(1.0)  # Ensure end
+            t_vals = np.array(t_vals)
+        elif relative_refinement is None and self.shear_web_refinements:
             relative_refinement = {}
             panels = self.get_panels()
             for sw, factor in self.shear_web_refinements.items():
