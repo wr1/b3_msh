@@ -1,5 +1,4 @@
 from multiprocessing import Pool
-import numpy as np
 
 
 def process_airfoils_parallel(airfoils, func, n_processes=None):

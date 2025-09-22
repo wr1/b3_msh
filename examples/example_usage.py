@@ -1,19 +1,26 @@
-import numpy as np
 from afmesh.core.airfoil import Airfoil
 from afmesh.core.shear_web import ShearWeb
 
 # Load NACA0018 from file
 af = Airfoil.from_xfoil("examples/naca0018.dat")
 
-# Add shear web
-sw = ShearWeb({'type': 'plane', 'origin': (0.5, 0, 0), 'normal': (1, 0, 0)})
-af.add_shear_web(sw)
+# Add shear web with refinement
+sw = ShearWeb({"type": "plane", "origin": (0.5, 0, 0), "normal": (1, 0, 0)})
+af.add_shear_web(sw, refinement_factor=2.0)
 
-# Remesh
+# Add trailing edge shear web
+sw_te = ShearWeb({"type": "trailing_edge"})
+af.add_shear_web(sw_te)
+
+# Add shear web with n_elements
+sw_mesh = ShearWeb({"type": "plane", "origin": (0.3, 0.05, 0), "normal": (0, 1, 0)})
+af.add_shear_web(sw_mesh, n_elements=10)
+
+# Remesh with total points, using shear web refinement
 af.remesh(total_n_points=100)
 
 # Plot
-af.plot(show_hard_points=True)
+af.plot(show_hard_points=True, save_path="airfoil.png")
 
 # Export to PyVista
 mesh = af.to_pyvista()
@@ -27,7 +34,7 @@ af_naca = Airfoil.from_xfoil("examples/naca0018.dat")
 af_naca.add_hard_point(0.3)
 af_naca.add_hard_point(0.7)
 af_naca.remesh(total_n_points=50)
-af_naca.plot(show_hard_points=True)
+af_naca.plot(show_hard_points=True, save_path="airfoil_naca.png")
 
 # Example with meshed shear webs
 print("Shear webs are included in the mesh and plot above.")
