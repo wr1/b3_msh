@@ -42,22 +42,21 @@ class Airfoil:
         self.spline_z = PchipInterpolator(t_orig, self.original_points[:, 2])
 
     def _apply_transformations(self, points):
-        """Apply scaling, rotation, and translation if not normalized."""
-        if not self.is_normalized:
-            # Scale by chord
-            points *= self.chord
-            # Rotate around z-axis
-            rot_rad = np.radians(self.rotation)
-            rot_matrix = np.array(
-                [
-                    [np.cos(rot_rad), -np.sin(rot_rad), 0],
-                    [np.sin(rot_rad), np.cos(rot_rad), 0],
-                    [0, 0, 1],
-                ]
-            )
-            points = points @ rot_matrix.T
-            # Translate
-            points += self.position
+        """Apply scaling, rotation, and translation."""
+        # Scale by chord
+        points *= self.chord
+        # Rotate around z-axis
+        rot_rad = np.radians(self.rotation)
+        rot_matrix = np.array(
+            [
+                [np.cos(rot_rad), -np.sin(rot_rad), 0],
+                [np.sin(rot_rad), np.cos(rot_rad), 0],
+                [0, 0, 1],
+            ]
+        )
+        points = points @ rot_matrix.T
+        # Translate
+        points += self.position
         return points
 
     def get_points(self, t_values):
@@ -99,6 +98,16 @@ class Airfoil:
         self.add_hard_point(t1)
         self.add_hard_point(t2)
         self.remesh()  # Update mesh to include new hard points
+
+    def rotate(self, angle):
+        """Rotate the airfoil by angle degrees around z-axis."""
+        self.rotation += angle
+        self.current_points = self.get_points(self.current_t)
+
+    def translate(self, x, y, z):
+        """Translate the airfoil by (x, y, z)."""
+        self.position += np.array([x, y, z])
+        self.current_points = self.get_points(self.current_t)
 
     def get_panels(self):
         """Get list of panels as (t_start, t_end) tuples."""
@@ -216,11 +225,11 @@ class Airfoil:
             start_idx = hp_indices[p_idx]
             end_idx = hp_indices[p_idx + 1]
             cell_data[start_idx:end_idx] = p_idx
-        # Shear webs have panel_id = len(panels)
-        panel_id_web = len(panels)
+        # Shear webs have panel_id = - (i + 1) for i in range(len(self.shear_webs))
         cell_start = n_airfoil_cells
-        for sw, start_idx, n_points_web in web_info:
-            n_cells_web = n_points_web - 1
+        for i, sw in enumerate(self.shear_webs):
+            panel_id_web = -(i + 1)
+            n_cells_web = self.shear_web_n_elements[sw]
             cell_data[cell_start : cell_start + n_cells_web] = panel_id_web
             cell_start += n_cells_web
         poly.cell_data["panel_id"] = cell_data
@@ -254,8 +263,27 @@ class Airfoil:
                 )
                 normals_point.append(normal)
             else:
-                # Web point
-                normals_point.append(np.array([0, 0, 1]))
+                # Web point - compute normal in plane of mesh
+                # Find which web this point belongs to
+                web_idx = 0
+                point_idx_in_web = i - len(airfoil_points)
+                for sw_idx, (sw, start_idx, n_points_web) in enumerate(web_info):
+                    if start_idx <= i < start_idx + n_points_web:
+                        web_idx = sw_idx
+                        break
+                sw = self.shear_webs[web_idx]
+                t1, t2 = sw.compute_intersections(self)
+                p1 = self.get_points([t1])[0]
+                p2 = self.get_points([t2])[0]
+                direction = p2 - p1
+                dx, dy, dz = direction
+                normal = np.array([-dy, dx, 0])
+                norm = np.linalg.norm(normal)
+                if norm > 0:
+                    normal /= norm
+                else:
+                    normal = np.array([0, 0, 1])
+                normals_point.append(normal)
         poly.point_data["Normals"] = np.array(normals_point)
         return poly
 
