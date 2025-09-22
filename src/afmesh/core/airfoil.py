@@ -289,6 +289,7 @@ class Airfoil:
 
     def plot(self, show_hard_points=False, save_path=None, show=True):
         """Plot the airfoil using Matplotlib."""
+        plt.figure()  # Create a new figure to avoid overlapping
         points = self.current_points
         plt.plot(points[:, 0], points[:, 1], "b-", alpha=0.5)
         # Plot shear webs
