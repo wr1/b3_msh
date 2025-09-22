@@ -14,7 +14,7 @@ sw_te = ShearWeb({"type": "trailing_edge"})
 af.add_shear_web(sw_te)
 
 # Add shear web with n_elements
-sw_mesh = ShearWeb({"type": "plane", "origin": (0.3, 0.05, 0), "normal": (1, 0, 0)})
+sw_mesh = ShearWeb({"type": "plane", "origin": (0.3, 0.05, 0), "normal": (0, 1, 0)})
 af.add_shear_web(sw_mesh, n_elements=10)
 
 # Remesh with total points, using shear web refinement
@@ -71,9 +71,28 @@ for af in [af1, af2, af3]:
     af.add_shear_web(sw_shared, n_elements=5)
     af.remesh(total_n_points=100)
 
-# Plot each airfoil
-for i, af in enumerate([af1, af2, af3], 1):
-    af.plot(show_hard_points=True, save_path=f"airfoil_multi_{i}.png")
+# Plot all airfoils in the same plot
+plt.figure()
+for i, af in enumerate([af1, af2, af3]):
+    points = af.current_points
+    plt.plot(
+        points[:, 0],
+        points[:, 1],
+        label=f"z={af.position[2]:.1f}, chord={af.chord}, twist={af.rotation}°",
+    )
+    # Plot shear webs
+    for sw in af.shear_webs:
+        t1, t2 = sw.compute_intersections(af)
+        p1 = af.get_points([t1])[0]
+        p2 = af.get_points([t2])[0]
+        plt.plot([p1[0], p2[0]], [p1[1], p2[1]], "g--", linewidth=2)
+plt.axis("equal")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title("Multiple Airfoils with Shared Shear Web")
+plt.legend()
+plt.grid(True)
+plt.savefig("airfoils_multi.png")
 
 # Export each to PyVista
 for i, af in enumerate([af1, af2, af3], 1):
