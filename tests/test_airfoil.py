@@ -22,6 +22,13 @@ def test_airfoil_init_3d():
     assert af.current_points.shape[1] == 3
 
 
+def test_from_xfoil():
+    """Test loading airfoil from XFOIL file."""
+    af = Airfoil.from_xfoil("tests/data/naca0018.dat")
+    assert af.current_points.shape[1] == 3
+    assert len(af.current_points) > 10  # Should have points
+
+
 def test_remesh():
     """Test remeshing."""
     points = np.array([[0, 0], [0.5, 0.1], [1, 0]])
