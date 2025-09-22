@@ -1,69 +1,78 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import copy
 from afmesh.core.airfoil import Airfoil
 from afmesh.core.shear_web import ShearWeb
 from afmesh.utils.utils import process_airfoils_parallel
+import pyvista as pv
+
 
 # Function to process each airfoil: add shear web and remesh
 def process_airfoil(af):
     """Process an airfoil by adding shear web and remeshing."""
     sw_shared = ShearWeb({"type": "plane", "origin": (0.5, 0, 0), "normal": (1, 0, 0)})
     af.add_shear_web(sw_shared, n_elements=5)
-    af.remesh(total_n_points=100)
+    # Example: set 20 elements in first panel, 30 in second, etc.
+    # Assuming 3 panels after adding shear web
+    af.remesh(n_elements_per_panel=[20, 30, 25])
     return af
+
 
 # Load base airfoil
 base_af = Airfoil.from_xfoil("examples/naca0018.dat")
 
-# Create three copies with different positions, chords, and twists
-af1 = copy.deepcopy(base_af)
-af1.chord = 1.5
-af1.position = np.array([0, 0, 0])
-af1.rotation = 0
+# Define the three base airfoils
+base_airfoils = [
+    {"chord": 1.5, "position": np.array([0, 0, 0]), "rotation": 0},
+    {"chord": 1.2, "position": np.array([0, 0, 2]), "rotation": 5},
+    {"chord": 1.0, "position": np.array([0, 0, 4]), "rotation": 10},
+]
 
-af2 = copy.deepcopy(base_af)
-af2.chord = 1.2
-af2.position = np.array([0, 0, 2])
-af2.rotation = 5
-
-af3 = copy.deepcopy(base_af)
-af3.chord = 1.0
-af3.position = np.array([0, 0, 4])
-af3.rotation = 10
-
-airfoils = [af1, af2, af3]
+# Interpolate to 30 sections (31 airfoils for 30 intervals)
+n_sections = 30
+n_airfoils = n_sections + 1
+airfoils = []
+for i in range(n_airfoils):
+    t = i / n_sections  # 0 to 1
+    # Linear interpolation between the three
+    if t <= 0.5:
+        t_local = t * 2  # 0 to 1 between first and second
+        chord = base_airfoils[0]["chord"] + t_local * (
+            base_airfoils[1]["chord"] - base_airfoils[0]["chord"]
+        )
+        position = base_airfoils[0]["position"] + t_local * (
+            base_airfoils[1]["position"] - base_airfoils[0]["position"]
+        )
+        rotation = base_airfoils[0]["rotation"] + t_local * (
+            base_airfoils[1]["rotation"] - base_airfoils[0]["rotation"]
+        )
+    else:
+        t_local = (t - 0.5) * 2  # 0 to 1 between second and third
+        chord = base_airfoils[1]["chord"] + t_local * (
+            base_airfoils[2]["chord"] - base_airfoils[1]["chord"]
+        )
+        position = base_airfoils[1]["position"] + t_local * (
+            base_airfoils[2]["position"] - base_airfoils[1]["position"]
+        )
+        rotation = base_airfoils[1]["rotation"] + t_local * (
+            base_airfoils[2]["rotation"] - base_airfoils[1]["rotation"]
+        )
+    af = copy.deepcopy(base_af)
+    af.chord = chord
+    af.position = position
+    af.rotation = rotation
+    airfoils.append(af)
 
 # Process airfoils in parallel
 processed_airfoils = process_airfoils_parallel(airfoils, process_airfoil)
 
-# Plot all airfoils in the same plot
-plt.figure()
+# Create MultiBlock for all meshes
+multi_block = pv.MultiBlock()
 for i, af in enumerate(processed_airfoils):
-    points = af.current_points
-    plt.plot(
-        points[:, 0],
-        points[:, 1],
-        label=f"z={af.position[2]:.1f}, chord={af.chord}, twist={af.rotation}°",
-    )
-    # Plot shear webs
-    for sw in af.shear_webs:
-        t1, t2 = sw.compute_intersections(af)
-        p1 = af.get_points([t1])[0]
-        p2 = af.get_points([t2])[0]
-        plt.plot([p1[0], p2[0]], [p1[1], p2[1]], "g--", linewidth=2)
-plt.axis("equal")
-plt.xlabel("x")
-plt.ylabel("y")
-plt.title("Multiple Airfoils with Shared Shear Web (Processed in Parallel)")
-plt.legend()
-plt.grid(True)
-plt.savefig("airfoils_multi.png")
-
-# Export each to PyVista
-for i, af in enumerate(processed_airfoils, 1):
     mesh = af.to_pyvista()
-    mesh.save(f"output_multi_{i}.vtp")
-    print(f"Mesh {i} has {mesh.n_points} points and {mesh.n_cells} cells")
+    multi_block.append(mesh, f"Section_{i}")
 
-print("Multiple airfoils with shared shear web processed in parallel.")
+# Save all to a single VTM file
+multi_block.save("airfoils_30_sections.vtm")
+print(f"Saved {len(processed_airfoils)} airfoil meshes to airfoils_30_sections.vtm")
+
+print("30 interpolated airfoils with shared shear web processed in parallel.")
