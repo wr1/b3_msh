@@ -302,6 +302,8 @@ class Airfoil:
         non_hard_mask = ~np.isin(self.current_t, self.hard_points)
         plt.plot(points[non_hard_mask, 0], points[non_hard_mask, 1], "k.", markersize=2)
         plt.axis("equal")
+        plt.xlabel("x")
+        plt.ylabel("y")
         plt.title("Airfoil Mesh")
         plt.grid(True)
         if show_hard_points:
