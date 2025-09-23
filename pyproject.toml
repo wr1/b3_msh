@@ -16,6 +16,7 @@ dependencies = [
     "matplotlib",
     "pytest",
     "pytest-cov",
+    "treeparse",
 ]
 
 [project.scripts]
