@@ -42,7 +42,6 @@ internally this is interpolated using a spline, which has parametric coordinate 
 - shearwebs can have names, and the coordinates related to the shear web interactions then have those names, say a web is named web0, then there are abs and relative distance from web0 hard point 0 and hard point 1  along airfoil as float arrays added to the output mesh
 - if hard points don't have explicit names they inherit from the shear web, default names for shear webs are web{nr} where nr is the shear web id after order of creation
 
-
 = tech 
 - scipy pchip for spline interpolation
 - numpy, prioritize vectorized operations
