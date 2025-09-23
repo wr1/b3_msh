@@ -72,7 +72,14 @@ def test_shear_web_named():
     """Test shear web with name."""
     points = np.array([[0, 0], [0.5, 0.1], [1, 0]])
     af = Airfoil(points)
-    sw = ShearWeb({"type": "plane", "origin": (0.5, 0.05, 0), "normal": (0, 1, 0), "name": "test_web"})
+    sw = ShearWeb(
+        {
+            "type": "plane",
+            "origin": (0.5, 0.05, 0),
+            "normal": (0, 1, 0),
+            "name": "test_web",
+        }
+    )
     af.add_shear_web(sw)
     mesh = af.to_pyvista()
     assert "abs_dist_test_web_hp0" in mesh.point_data

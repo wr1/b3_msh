@@ -11,7 +11,7 @@ class AirfoilCore:
     ):
         """Initialize an Airfoil."""
         self.logger = get_logger(self.__class__.__name__)
-        self.logger.info("Initializing AirfoilCore")
+        self.logger.debug("Initializing AirfoilCore")
         self.original_points = np.array(points)
         if self.original_points.shape[1] == 2:
             self.original_points = np.column_stack(
@@ -90,19 +90,19 @@ class AirfoilCore:
     def from_array(cls, points, **kwargs):
         """Create airfoil from numpy array."""
         cls.logger = get_logger(cls.__name__)
-        cls.logger.info("Creating airfoil from numpy array")
+        cls.logger.debug("Creating airfoil from numpy array")
         return cls(points, **kwargs)
 
     def rotate(self, angle):
         """Rotate the airfoil by angle degrees around z-axis."""
-        self.logger.info(f"Rotating airfoil by {angle} degrees")
+        self.logger.debug(f"Rotating airfoil by {angle} degrees")
         self.rotation += angle
         self.current_points = self.get_points(self.current_t)
         self.logger.debug("Rotation applied")
 
     def translate(self, x, y, z):
         """Translate the airfoil by (x, y, z)."""
-        self.logger.info(f"Translating airfoil by ({x}, {y}, {z})")
+        self.logger.debug(f"Translating airfoil by ({x}, {y}, {z})")
         self.position += np.array([x, y, z])
         self.current_points = self.get_points(self.current_t)
         self.logger.debug("Translation applied")

@@ -60,6 +60,6 @@ for i, af in enumerate(processed_airfoils):
 
 # Save all to a single VTM file
 multi_block.save("airfoils_30_sections.vtm")
-print(f"Saved {len(processed_airfoils)} airfoil meshes to airfoils_30_sections.vtm")
+print("Saved 30 interpolated airfoils with shared shear web processed in parallel to airfoils_30_sections.vtm")
 
 print("30 interpolated airfoils with shared shear web processed in parallel.")

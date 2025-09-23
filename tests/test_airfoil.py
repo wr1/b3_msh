@@ -145,7 +145,7 @@ def test_named_hard_points():
     """Test named hard points."""
     points = np.array([[0, 0], [0.5, 0.1], [1, 0]])
     af = Airfoil(points)
-    af.add_hard_point(0.5, name='mid')
+    af.add_hard_point(0.5, name="mid")
     mesh = af.to_pyvista()
     assert "abs_dist_leading_edge" in mesh.point_data
     assert "abs_dist_trailing_edge" in mesh.point_data

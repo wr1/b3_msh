@@ -10,7 +10,7 @@ class AirfoilMesh:
 
     def add_hard_point(self, t, name=None):
         """Add a hard point at parametric t."""
-        self.logger.info(f"Adding hard point at t={t}")
+        self.logger.debug(f"Adding hard point at t={t}")
         if 0 <= t <= 1 and t not in self.hard_points:
             self.hard_points.append(t)
             self.hard_points.sort()
@@ -24,7 +24,7 @@ class AirfoilMesh:
 
     def add_shear_web(self, shear_web, refinement_factor=1.0, n_elements=None):
         """Add a shear web, which adds hard points at intersections."""
-        self.logger.info(f"Adding shear web: {shear_web.definition}")
+        self.logger.debug(f"Adding shear web: {shear_web.definition}")
         shear_web.name = shear_web.definition.get('name', f'web{len(self.shear_webs)}')
         self.shear_webs.append(shear_web)
         self.shear_web_refinements[shear_web] = refinement_factor
@@ -56,7 +56,7 @@ class AirfoilMesh:
         n_elements_per_panel=None,
     ):
         """Remesh the airfoil."""
-        self.logger.info("Remeshing airfoil")
+        self.logger.debug("Remeshing airfoil")
         if n_elements_per_panel is not None:
             self.logger.debug("Remeshing with n_elements_per_panel")
             panels = self.get_panels()

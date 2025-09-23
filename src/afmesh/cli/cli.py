@@ -8,7 +8,9 @@ from treeparse import cli, command, argument, option
 def plot(
     file: str,
     chord: float = 1.0,
-    position: list[float] = [0, 0, 0],
+    px=0,
+    py=0,
+    pz=0,
     rotation: float = 0,
     verbose: bool = False,
 ):
@@ -18,12 +20,12 @@ def plot(
         logging.getLogger().setLevel(logging.DEBUG)
         logger.info("Verbose logging enabled")
     else:
-        logging.getLogger().setLevel(logging.INFO)
+        logging.getLogger().setLevel(logging.WARNING)
     logger.info(f"Plotting airfoil from {file}")
     af = Airfoil.from_xfoil(
         file,
         chord=chord,
-        position=tuple(position),
+        position=(px, py, pz),
         rotation=rotation,
     )
     af.plot()
@@ -32,8 +34,8 @@ def plot(
 
 def remesh(
     file: str,
-    n_points: int = 100,
     output: str,
+    n_points: int = 100,
     verbose: bool = False,
 ):
     """Remesh an airfoil and save."""
@@ -42,12 +44,12 @@ def remesh(
         logging.getLogger().setLevel(logging.DEBUG)
         logger.info("Verbose logging enabled")
     else:
-        logging.getLogger().setLevel(logging.INFO)
+        logging.getLogger().setLevel(logging.WARNING)
     logger.info(f"Remeshing airfoil from {file}")
     af = Airfoil.from_xfoil(file)
     af.remesh(n_points=n_points)
     np.savetxt(output, af.current_points[:, :2], header="x y", comments="")
-    logger.info(f"Remeshed points saved to {output}")
+    print(f"Remeshed points saved to {output}")
     logger.debug("Remesh command completed")
 
 
@@ -77,26 +79,39 @@ plot_cmd = command(
             sort_key=0,
         ),
         option(
-            flags=["--position", "-p"],
+            flags=["--px"],
             arg_type=float,
-            nargs=3,
-            default=[0, 0, 0],
-            help="Position (x y z).",
+            default=0,
+            help="Position x.",
             sort_key=1,
+        ),
+        option(
+            flags=["--py"],
+            arg_type=float,
+            default=0,
+            help="Position y.",
+            sort_key=2,
+        ),
+        option(
+            flags=["--pz"],
+            arg_type=float,
+            default=0,
+            help="Position z.",
+            sort_key=3,
         ),
         option(
             flags=["--rotation", "-r"],
             arg_type=float,
             default=0,
             help="Rotation in degrees.",
-            sort_key=2,
+            sort_key=4,
         ),
         option(
             flags=["--verbose", "-v"],
             arg_type=bool,
             default=False,
             help="Enable verbose logging.",
-            sort_key=3,
+            sort_key=5,
         ),
     ],
 )

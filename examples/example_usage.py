@@ -30,6 +30,7 @@ print(f"Point data keys: {list(mesh.point_data.keys())}")
 
 # Write to VTP
 mesh.save("output.vtp")
+print("Mesh saved to output.vtp")
 
 # Example with NACA0018 from file and hard points at t=0.3 and t=0.7
 af_naca = Airfoil.from_xfoil("examples/naca0018.dat")

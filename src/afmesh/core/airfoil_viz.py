@@ -12,7 +12,7 @@ class AirfoilViz:
 
     def to_pyvista(self):
         """Export to PyVista PolyData (line mesh)."""
-        self.logger.info("Exporting to PyVista")
+        self.logger.debug("Exporting to PyVista")
         airfoil_points = self.current_points
         web_points = []
         web_info = []  # list of (sw, start_idx, n_points_web)
@@ -124,7 +124,7 @@ class AirfoilViz:
 
     def plot(self, show_hard_points=False, save_path=None, show=True):
         """Plot the airfoil using Matplotlib."""
-        self.logger.info("Plotting airfoil")
+        self.logger.debug("Plotting airfoil")
         plt.figure()  # Create a new figure to avoid overlapping
         points = self.current_points
         plt.plot(points[:, 0], points[:, 1], "b-", alpha=0.5)
@@ -150,7 +150,7 @@ class AirfoilViz:
             )
         if save_path:
             plt.savefig(save_path)
-            self.logger.debug(f"Plot saved to {save_path}")
+            print(f"Plot saved to {save_path}")
         if show and save_path is None:
             plt.show()
         self.logger.debug("Plotting complete")

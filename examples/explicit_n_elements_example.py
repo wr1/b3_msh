@@ -47,5 +47,6 @@ if len(panels_after) == len(n_elements_dict_new):
     af.plot(show_hard_points=True, save_path="explicit_n_elements_with_web.png")
     mesh2 = af.to_pyvista()
     mesh2.save("explicit_n_elements_with_web.vtp")
+    print(f"Mesh with web saved with {mesh2.n_points} points and {mesh2.n_cells} cells")
 else:
     print("Adjust n_elements_dict to match number of panels")

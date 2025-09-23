@@ -9,14 +9,14 @@ class ShearWeb:
     def __init__(self, definition):
         """Initialize a ShearWeb."""
         self.logger = get_logger(self.__class__.__name__)
-        self.logger.info("Initializing ShearWeb")
+        self.logger.debug("Initializing ShearWeb")
         self.definition = definition
         self.name = None  # Set in add_shear_web
         self.logger.debug(f"ShearWeb definition: {definition}")
 
     def compute_intersections(self, airfoil):
         """Compute t values where the shear web intersects the airfoil spline."""
-        self.logger.info("Computing intersections")
+        self.logger.debug("Computing intersections")
         if self.definition["type"] == "plane":
             result = self._intersect_plane(airfoil)
         elif self.definition["type"] == "line":
