@@ -10,17 +10,19 @@ class AirfoilMesh:
 
     def add_hard_point(self, t, name=None):
         """Add a hard point at parametric t."""
-        self.logger.debug(f"Adding hard point at t={t}")
-        if 0 <= t <= 1 and t not in self.hard_points:
-            self.hard_points.append(t)
-            self.hard_points.sort()
-            if name is None:
-                name = f"hp{len(self.hard_point_names)}"
-            self.hard_point_names[t] = name
-            self.remesh()  # Update mesh to include new hard points
-            self.logger.debug(f"Hard point added: {name} at t={t}")
-        else:
-            self.logger.warning(f"Hard point at t={t} not added: invalid or duplicate")
+        if not (0 <= t <= 1):
+            self.logger.warning(f"Hard point at t={t} not added: invalid value")
+            return
+        if t in self.hard_points:
+            # Already exists, skip
+            return
+        self.hard_points.append(t)
+        self.hard_points.sort()
+        if name is None:
+            name = f"hp{len(self.hard_point_names)}"
+        self.hard_point_names[t] = name
+        self.remesh()  # Update mesh to include new hard points
+        self.logger.debug(f"Hard point added: {name} at t={t}")
 
     def add_shear_web(self, shear_web, refinement_factor=1.0, n_elements=None):
         """Add a shear web, which adds hard points at intersections."""

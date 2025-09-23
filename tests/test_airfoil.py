@@ -116,9 +116,10 @@ def test_to_pyvista():
     assert mesh.n_points == len(af.current_points)
     assert "panel_id" in mesh.cell_data
     assert len(mesh.cell_data["panel_id"]) == mesh.n_cells
-    assert "abs_dist_leading_edge" in mesh.point_data
-    assert "rel_dist_leading_edge" in mesh.point_data
+    assert "abs_dist_t0" in mesh.point_data
+    assert "rel_dist_t0" in mesh.point_data
     assert "Normals" in mesh.point_data
+    assert "t" in mesh.point_data
 
 
 def test_plot_show_hard_points():
@@ -147,6 +148,6 @@ def test_named_hard_points():
     af = Airfoil(points)
     af.add_hard_point(0.5, name="mid")
     mesh = af.to_pyvista()
-    assert "abs_dist_leading_edge" in mesh.point_data
-    assert "abs_dist_trailing_edge" in mesh.point_data
+    assert "abs_dist_t0" in mesh.point_data
+    assert "abs_dist_t1" in mesh.point_data
     assert "abs_dist_mid" in mesh.point_data

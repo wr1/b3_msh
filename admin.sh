@@ -19,5 +19,9 @@ git add tests/test_airfoil.py
 git commit tests/test_airfoil.py -m 'Update imports in test_airfoil.py for b3_msh'
 git add tests/test_shear_web.py
 git commit tests/test_shear_web.py -m 'Update imports in test_shear_web.py for b3_msh'
+git add examples/process_blade.py
+git commit examples/process_blade.py -m 'Add process_blade.py script to process blade geometry from YAML and generate meshed airfoils with shear webs'
+git add examples/blade_test.yml
+git commit examples/blade_test.yml -m 'Add blade_test.yml configuration file for blade processing example'
 git add admin.sh
-git commit admin.sh -m 'Add admin.sh script for formatting, checking, and committing changes'
+git commit admin.sh -m 'Update admin.sh with new files for blade processing'

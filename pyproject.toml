@@ -17,6 +17,9 @@ dependencies = [
     "pytest",
     "pytest-cov",
     "treeparse",
+    "pydantic",
+    "statesman @ git+https://github.com/wr1/statesman.git",
+    "pyyaml",
 ]
 
 [project.scripts]
@@ -24,6 +27,9 @@ b3_msh = "b3_msh.cli.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/b3_msh"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.ruff]
 line-length = 88
@@ -34,5 +40,5 @@ select = ["E", "F", "W", "C90"]
 ignore = []
 
 [tool.pytest.ini_options]
-addopts = "--cov=b3_msh --cov-report=html"
+addopts = "--cov=b3_msh "
 testpaths = ["tests"]

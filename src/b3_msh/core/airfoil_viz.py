@@ -15,6 +15,7 @@ class AirfoilViz:
         self.logger.debug("Exporting to PyVista")
         airfoil_points = self.current_points
         web_points = []
+        web_w = []
         web_info = []  # list of (sw, start_idx, n_points_web)
         current_web_idx = len(airfoil_points)
         for sw in self.shear_webs:
@@ -24,13 +25,16 @@ class AirfoilViz:
             n_elements = self.shear_web_n_elements[sw]
             n_points_web = n_elements + 1
             web_points.append(np.linspace(p1, p2, n_points_web))
+            web_w.append(np.linspace(0, 1, n_points_web))
             web_info.append((sw, current_web_idx, n_points_web))
             current_web_idx += n_points_web
         if web_points:
             web_points = np.vstack(web_points)
+            web_w = np.concatenate(web_w)
             all_points = np.vstack([airfoil_points, web_points])
         else:
             all_points = airfoil_points
+            web_w = np.array([])
         n_points = len(all_points)
         lines = []
         # Airfoil lines
@@ -66,11 +70,16 @@ class AirfoilViz:
             cell_data[cell_start : cell_start + n_cells_web] = panel_id_web
             cell_start += n_cells_web
         poly.cell_data["panel_id"] = cell_data
+        # Compute cumulative arc lengths
+        diffs = np.diff(airfoil_points, axis=0)
+        arc_lengths = np.sqrt(np.sum(diffs**2, axis=1))
+        cum_arc = np.cumsum(arc_lengths)
+        cum_arc = np.insert(cum_arc, 0, 0)
         # Add distances from hard points
         for hp in sorted(self.hard_points):
             name = self.hard_point_names[hp]
-            hp_pos = self.get_points([hp])[0]
-            abs_distances = np.linalg.norm(airfoil_points - hp_pos, axis=1)
+            hp_idx = np.where(np.isclose(self.current_t, hp))[0][0]
+            abs_distances = np.abs(cum_arc - cum_arc[hp_idx])
             poly.point_data[f"abs_dist_{name}"] = np.concatenate(
                 [abs_distances, np.zeros(len(all_points) - len(airfoil_points))]
             )
@@ -78,6 +87,14 @@ class AirfoilViz:
             poly.point_data[f"rel_dist_{name}"] = np.concatenate(
                 [rel_distances, np.zeros(len(all_points) - len(airfoil_points))]
             )
+        # Add t values
+        poly.point_data["t"] = np.concatenate(
+            [self.current_t, np.full(len(all_points) - len(airfoil_points), np.nan)]
+        )
+        # Add w values for webs
+        poly.point_data["w"] = np.concatenate(
+            [np.full(len(airfoil_points), np.nan), web_w]
+        )
         # Compute normal vectors for points
         normals_point = []
         for i in range(len(all_points)):

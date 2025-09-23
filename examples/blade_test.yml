@@ -35,39 +35,33 @@ airfoils:
     name: NACA 0017
     thickness: 0.17
 
-mesh:
-  z: [-4,-20.25,-50,-80]
+
+structure:
   webs:
     - name: web0
       type: plane
       origin: [0, 0, 0]
       orientation: [0.02, 1, 0]
-      z_range: [-100, -10]
+      z_range: [-100, -1]
       element_size: 0.10
       mesh: false
     - name: web1
       type: plane
       origin: [0, 0.2, 0]
       orientation: [0.02, 1, 0]
-      z_range: [-110, -30]
+      z_range: [-110, -1]
       element_size: 0.10
       mesh: true
     - name: web2
       type: plane
       origin: [0, -0.2, 0]
       orientation: [0.02, 1, 0]
-      z_range: [-100, -10]
+      z_range: [-100, -1]
       element_size: 0.10
       mesh: true
 
-  spanwise:
-    
+mesh:
   chordwise:
     default:
-      n_elem: 40  # number of elements per panel where panel between 2 hard points, hard points being the start or end of the airfoil line, or a web intersection
-      element_size: 0.10
-    panels:
-      - id: 0
-        element_size: 0.1
-      - id: 1
-        element_size: 0.10
+      n_elem: 140  # number of elements per panel where panel between 2 hard points, hard points being the start or end of the airfoil line, or a web intersection
+      
