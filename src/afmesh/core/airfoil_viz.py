@@ -1,13 +1,18 @@
 import numpy as np
 import pyvista as pv
 import matplotlib.pyplot as plt
+from ..utils.logger import get_logger
 
 
 class AirfoilViz:
     """Visualization functionality for Airfoil, including plotting and PyVista export."""
 
+    def __init__(self):
+        self.logger = get_logger(self.__class__.__name__)
+
     def to_pyvista(self):
         """Export to PyVista PolyData (line mesh)."""
+        self.logger.info("Exporting to PyVista")
         airfoil_points = self.current_points
         web_points = []
         web_info = []  # list of (sw, start_idx, n_points_web)
@@ -114,10 +119,12 @@ class AirfoilViz:
                     normal = np.array([0, 0, 1])
                 normals_point.append(normal)
         poly.point_data["Normals"] = np.array(normals_point)
+        self.logger.debug(f"PyVista mesh created with {poly.n_points} points and {poly.n_cells} cells")
         return poly
 
     def plot(self, show_hard_points=False, save_path=None, show=True):
         """Plot the airfoil using Matplotlib."""
+        self.logger.info("Plotting airfoil")
         plt.figure()  # Create a new figure to avoid overlapping
         points = self.current_points
         plt.plot(points[:, 0], points[:, 1], "b-", alpha=0.5)
@@ -143,5 +150,7 @@ class AirfoilViz:
             )
         if save_path:
             plt.savefig(save_path)
+            self.logger.debug(f"Plot saved to {save_path}")
         if show and save_path is None:
             plt.show()
+        self.logger.debug("Plotting complete")

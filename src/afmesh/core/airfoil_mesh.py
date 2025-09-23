@@ -1,11 +1,16 @@
 import numpy as np
+from ..utils.logger import get_logger
 
 
 class AirfoilMesh:
     """Meshing functionality for Airfoil, including hard points, panels, and remeshing."""
 
+    def __init__(self):
+        self.logger = get_logger(self.__class__.__name__)
+
     def add_hard_point(self, t, name=None):
         """Add a hard point at parametric t."""
+        self.logger.info(f"Adding hard point at t={t}")
         if 0 <= t <= 1 and t not in self.hard_points:
             self.hard_points.append(t)
             self.hard_points.sort()
@@ -13,9 +18,13 @@ class AirfoilMesh:
                 name = f'hp{len(self.hard_point_names)}'
             self.hard_point_names[t] = name
             self.remesh()  # Update mesh to include new hard points
+            self.logger.debug(f"Hard point added: {name} at t={t}")
+        else:
+            self.logger.warning(f"Hard point at t={t} not added: invalid or duplicate")
 
     def add_shear_web(self, shear_web, refinement_factor=1.0, n_elements=None):
         """Add a shear web, which adds hard points at intersections."""
+        self.logger.info(f"Adding shear web: {shear_web.definition}")
         shear_web.name = shear_web.definition.get('name', f'web{len(self.shear_webs)}')
         self.shear_webs.append(shear_web)
         self.shear_web_refinements[shear_web] = refinement_factor
@@ -26,13 +35,16 @@ class AirfoilMesh:
         self.add_hard_point(t1, name=f'{shear_web.name}_hp0')
         self.add_hard_point(t2, name=f'{shear_web.name}_hp1')
         self.remesh()  # Update mesh to include new hard points
+        self.logger.debug(f"Shear web added with intersections at t={t1}, t={t2}")
 
     def get_panels(self):
         """Get list of panels as (t_start, t_end) tuples."""
+        self.logger.debug("Getting panels")
         panels = []
         sorted_hp = sorted(self.hard_points)
         for i in range(len(sorted_hp) - 1):
             panels.append((sorted_hp[i], sorted_hp[i + 1]))
+        self.logger.debug(f"Panels: {panels}")
         return panels
 
     def remesh(
@@ -44,7 +56,9 @@ class AirfoilMesh:
         n_elements_per_panel=None,
     ):
         """Remesh the airfoil."""
+        self.logger.info("Remeshing airfoil")
         if n_elements_per_panel is not None:
+            self.logger.debug("Remeshing with n_elements_per_panel")
             panels = self.get_panels()
             t_vals = []
             for p_idx, (t_start, t_end) in enumerate(panels):
@@ -57,6 +71,7 @@ class AirfoilMesh:
             t_vals = np.sort(np.unique(t_vals))
             self.current_t = t_vals
             self.current_points = self.get_points(t_vals)
+            self.logger.debug(f"Remeshed to {len(t_vals)} points")
             return
         elif relative_refinement is None and self.shear_web_refinements:
             relative_refinement = {}
@@ -69,8 +84,10 @@ class AirfoilMesh:
                             relative_refinement.get(p_idx, 1.0), factor
                         )
         if t_distribution is not None:
+            self.logger.debug("Using provided t_distribution")
             t_vals = np.array(t_distribution)
         elif total_n_points is not None:
+            self.logger.debug(f"Remeshing to total {total_n_points} points")
             panels = self.get_panels()
             total_segments = total_n_points - 1
             t_vals = []
@@ -82,11 +99,13 @@ class AirfoilMesh:
                 t_vals.extend(t_panel)
             t_vals = np.array(t_vals)
         elif element_length is not None:
+            self.logger.debug(f"Remeshing with element length {element_length}")
             # Approximate based on arc length
             total_length = self._arc_length(0, 1)
             n = int(total_length / element_length)
             t_vals = np.linspace(0, 1, n)
         elif relative_refinement is not None:
+            self.logger.debug("Remeshing with relative refinement")
             # Refine relative to current
             panels = self.get_panels()
             t_vals = []
@@ -97,16 +116,21 @@ class AirfoilMesh:
                 t_vals.extend(t_panel)
             t_vals = np.array(t_vals)
         else:
+            self.logger.debug("Using default t_distribution")
             t_vals = self.current_t  # Default
 
         # Ensure hard points are included
         all_t = np.sort(np.unique(np.concatenate([t_vals, self.hard_points])))
         self.current_t = all_t
         self.current_points = self.get_points(all_t)
+        self.logger.info(f"Remeshing complete: {len(all_t)} points")
 
     def _arc_length(self, t1, t2, n_samples=1000):
         """Approximate arc length between t1 and t2."""
+        self.logger.debug(f"Calculating arc length from {t1} to {t2}")
         t_samples = np.linspace(t1, t2, n_samples)
         points = self.get_points(t_samples)
         diffs = np.diff(points, axis=0)
-        return np.sum(np.sqrt(np.sum(diffs**2, axis=1)))
+        length = np.sum(np.sqrt(np.sum(diffs**2, axis=1)))
+        self.logger.debug(f"Arc length: {length}")
+        return length

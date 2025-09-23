@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.optimize import brentq
+from ..utils.logger import get_logger
 
 
 class ShearWeb:
@@ -7,22 +8,30 @@ class ShearWeb:
 
     def __init__(self, definition):
         """Initialize a ShearWeb."""
+        self.logger = get_logger(self.__class__.__name__)
+        self.logger.info("Initializing ShearWeb")
         self.definition = definition
         self.name = None  # Set in add_shear_web
+        self.logger.debug(f"ShearWeb definition: {definition}")
 
     def compute_intersections(self, airfoil):
         """Compute t values where the shear web intersects the airfoil spline."""
+        self.logger.info("Computing intersections")
         if self.definition["type"] == "plane":
-            return self._intersect_plane(airfoil)
+            result = self._intersect_plane(airfoil)
         elif self.definition["type"] == "line":
-            return self._intersect_line(airfoil)
+            result = self._intersect_line(airfoil)
         elif self.definition["type"] == "trailing_edge":
-            return 0.0, 1.0
+            result = 0.0, 1.0
         else:
+            self.logger.error(f"Unsupported shear web type: {self.definition['type']}")
             raise ValueError("Unsupported shear web type")
+        self.logger.debug(f"Intersections: {result}")
+        return result
 
     def _intersect_plane(self, airfoil):
         """Find t where spline intersects plane using root-finding."""
+        self.logger.debug("Intersecting with plane")
         origin = np.array(self.definition["origin"])
         normal = np.array(self.definition["normal"])
 
@@ -36,10 +45,12 @@ class ShearWeb:
             t2 = brentq(f, 0.5, 1)
             return t1, t2
         except ValueError:
+            self.logger.error("Plane does not intersect airfoil at two points")
             raise ValueError("Plane does not intersect airfoil at two points")
 
     def _intersect_line(self, airfoil):
         """Find t where spline is closest to line (approximate intersection)."""
+        self.logger.debug("Intersecting with line")
         # For simplicity, minimize distance; assumes 2D or 3D line
         point = np.array(self.definition["point"])
         direction = np.array(self.definition["direction"])
