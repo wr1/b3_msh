@@ -1,3 +1,5 @@
+import numpy as np
+import matplotlib.pyplot as plt
 from afmesh.core.airfoil import Airfoil
 from afmesh.core.shear_web import ShearWeb
 
@@ -12,10 +14,10 @@ af.add_hard_point(0.7)
 panels = af.get_panels()
 print(f"Panels: {panels}")
 
-# Remesh with explicit number of elements per panel
-# For example, 10 elements in first panel, 20 in second, 15 in third
-n_elements_list = [10, 20, 15]
-af.remesh(n_elements_per_panel=n_elements_list)
+# Remesh with explicit number of elements per panel using dict
+# Key is panel_id (0-based index), value is n_elements
+n_elements_dict = {0: 10, 1: 20, 2: 15}
+af.remesh(n_elements_per_panel=n_elements_dict)
 
 print(f"Total points after remesh: {len(af.current_points)}")
 
@@ -35,14 +37,14 @@ af.add_shear_web(sw, n_elements=5)
 panels_after = af.get_panels()
 print(f"Panels after adding shear web: {panels_after}")
 
-# Remesh with new explicit n_elements (adjust list accordingly)
+# Remesh with new explicit n_elements (adjust dict accordingly)
 # Assuming 4 panels now, set n_elements
-n_elements_list_new = [10, 15, 20, 10]  # Example
-if len(panels_after) == len(n_elements_list_new):
-    af.remesh(n_elements_per_panel=n_elements_list_new)
+n_elements_dict_new = {0: 10, 1: 15, 2: 20, 3: 10}  # Example
+if len(panels_after) == len(n_elements_dict_new):
+    af.remesh(n_elements_per_panel=n_elements_dict_new)
     print(f"Remeshed with shear web, total points: {len(af.current_points)}")
     af.plot(show_hard_points=True, save_path="explicit_n_elements_with_web.png")
     mesh2 = af.to_pyvista()
     mesh2.save("explicit_n_elements_with_web.vtp")
 else:
-    print("Adjust n_elements_list to match number of panels")
+    print("Adjust n_elements_dict to match number of panels")

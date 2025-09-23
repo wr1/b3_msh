@@ -79,27 +79,16 @@ def test_remesh_n_elements_per_panel():
     points = np.array([[0, 0], [0.5, 0.1], [1, 0]])
     af = Airfoil(points)
     af.add_hard_point(0.5)
-    af.remesh(n_elements_per_panel=[10, 20])
+    n_elements = [10, 20]
+    af.remesh(n_elements_per_panel=n_elements)
     panels = af.get_panels()
     assert len(panels) == 2
-    # Check approximate number of points
-    hp_indices = [
-        np.where(np.isclose(af.current_t, hp))[0][0] for hp in sorted(af.hard_points)
-    ]
-    assert (
-        hp_indices[1] - hp_indices[0] == 10
-    )  # 10 elements -> 11 points, but since linspace includes ends, wait
-    # linspace(t_start, t_end, n_elem + 1), but in code, extend[:-1] except last
-    # Actually, for each panel, linspace with n_elem + 1 points, but extend[:-1], so n_elem points per panel except last adds the end
-    # It's a bit off, but for test, check total points
-    assert (
-        len(af.current_points) == 11 + 21
-    )  # 11 for first (10 elem +1), 21 for second (20+1), but since shared end, wait no
-    # In code: for each panel, t_panel = linspace(..., n_elem + 1), extend(t_panel[:-1]), then append 1.0
-    # So for 2 panels, first adds n_elem points, second adds n_elem points, plus the end
-    # Wait, let's say n_elem1=10, n_elem2=20, t_vals = linspace(0,0.5,11)[:-1] + linspace(0.5,1,21)[:-1] + [1]
-    # So 10 + 20 + 1 = 31 points
-    assert len(af.current_points) == 31
+    # Check number of elements (cells) per panel
+    mesh = af.to_pyvista()
+    panel_ids = mesh.cell_data["panel_id"]
+    for p_idx, n_elem in enumerate(n_elements):
+        n_cells_panel = np.sum(panel_ids == p_idx)
+        assert n_cells_panel == n_elem
 
 
 def test_hard_points():
