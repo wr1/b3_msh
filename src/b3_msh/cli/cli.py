@@ -54,8 +54,8 @@ def remesh(
 
 
 app = cli(
-    name="afmesh",
-    help="Command-line interface for afmesh airfoil processing.",
+    name="b3_msh",
+    help="Command-line interface for b3_msh airfoil processing.",
     max_width=120,
     show_types=True,
     show_defaults=True,
@@ -68,7 +68,9 @@ plot_cmd = command(
     help="Plot an airfoil from file.",
     callback=plot,
     arguments=[
-        argument(name="file", arg_type=str, help="Path to XFOIL format file.", sort_key=0),
+        argument(
+            name="file", arg_type=str, help="Path to XFOIL format file.", sort_key=0
+        ),
     ],
     options=[
         option(
@@ -122,8 +124,15 @@ remesh_cmd = command(
     help="Remesh an airfoil and save.",
     callback=remesh,
     arguments=[
-        argument(name="file", arg_type=str, help="Path to XFOIL format file.", sort_key=0),
-        argument(name="output", arg_type=str, help="Output file for remeshed points.", sort_key=1),
+        argument(
+            name="file", arg_type=str, help="Path to XFOIL format file.", sort_key=0
+        ),
+        argument(
+            name="output",
+            arg_type=str,
+            help="Output file for remeshed points.",
+            sort_key=1,
+        ),
     ],
     options=[
         option(
