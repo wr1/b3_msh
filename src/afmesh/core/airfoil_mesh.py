@@ -42,13 +42,15 @@ class AirfoilMesh:
         """Remesh the airfoil."""
         if n_elements_per_panel is not None:
             panels = self.get_panels()
-            if len(n_elements_per_panel) != len(panels):
-                raise ValueError("n_elements_per_panel must match number of panels")
             t_vals = []
-            for (t_start, t_end), n_elem in zip(panels, n_elements_per_panel):
+            for p_idx, (t_start, t_end) in enumerate(panels):
+                if isinstance(n_elements_per_panel, dict):
+                    n_elem = n_elements_per_panel.get(p_idx, 1)
+                else:
+                    n_elem = n_elements_per_panel[p_idx]
                 t_panel = np.linspace(t_start, t_end, n_elem + 1)
-                t_vals.extend(t_panel[:-1])  # Avoid duplicating end points
-            t_vals.append(1.0)  # Ensure end
+                t_vals.extend(t_panel[:-1])
+            t_vals.append(1.0)
             t_vals = np.array(t_vals)
         elif relative_refinement is None and self.shear_web_refinements:
             relative_refinement = {}

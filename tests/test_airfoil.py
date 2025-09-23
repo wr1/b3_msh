@@ -79,14 +79,14 @@ def test_remesh_n_elements_per_panel():
     points = np.array([[0, 0], [0.5, 0.1], [1, 0]])
     af = Airfoil(points)
     af.add_hard_point(0.5)
-    n_elements = [10, 20]
+    n_elements = {0: 10, 1: 20}
     af.remesh(n_elements_per_panel=n_elements)
     panels = af.get_panels()
     assert len(panels) == 2
     # Check number of elements (cells) per panel
     mesh = af.to_pyvista()
     panel_ids = mesh.cell_data["panel_id"]
-    for p_idx, n_elem in enumerate(n_elements):
+    for p_idx, n_elem in n_elements.items():
         n_cells_panel = np.sum(panel_ids == p_idx)
         assert n_cells_panel == n_elem
 
