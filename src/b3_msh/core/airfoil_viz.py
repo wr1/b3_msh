@@ -119,7 +119,9 @@ class AirfoilViz:
                     normal = np.array([0, 0, 1])
                 normals_point.append(normal)
         poly.point_data["Normals"] = np.array(normals_point)
-        self.logger.debug(f"PyVista mesh created with {poly.n_points} points and {poly.n_cells} cells")
+        self.logger.debug(
+            f"PyVista mesh created with {poly.n_points} points and {poly.n_cells} cells"
+        )
         return poly
 
     def plot(self, show_hard_points=False, save_path=None, show=True):
@@ -150,7 +152,14 @@ class AirfoilViz:
             hard_points_pos = self.get_points(self.hard_points)
             plt.plot(hard_points_pos[:, 0], hard_points_pos[:, 1], "ro", markersize=8)
             for i, (x, y, _) in enumerate(hard_points_pos):
-                plt.text(x, y + 0.01, f"t={self.hard_points[i]:.2f}", fontsize=8, ha="center", va="bottom")
+                plt.text(
+                    x,
+                    y + 0.01,
+                    f"t={self.hard_points[i]:.2f}",
+                    fontsize=8,
+                    ha="center",
+                    va="bottom",
+                )
         if save_path:
             plt.savefig(save_path)
             print(f"Plot saved to {save_path}")

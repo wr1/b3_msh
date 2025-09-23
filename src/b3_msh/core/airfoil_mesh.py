@@ -15,7 +15,7 @@ class AirfoilMesh:
             self.hard_points.append(t)
             self.hard_points.sort()
             if name is None:
-                name = f'hp{len(self.hard_point_names)}'
+                name = f"hp{len(self.hard_point_names)}"
             self.hard_point_names[t] = name
             self.remesh()  # Update mesh to include new hard points
             self.logger.debug(f"Hard point added: {name} at t={t}")
@@ -25,15 +25,15 @@ class AirfoilMesh:
     def add_shear_web(self, shear_web, refinement_factor=1.0, n_elements=None):
         """Add a shear web, which adds hard points at intersections."""
         self.logger.debug(f"Adding shear web: {shear_web.definition}")
-        shear_web.name = shear_web.definition.get('name', f'web{len(self.shear_webs)}')
+        shear_web.name = shear_web.definition.get("name", f"web{len(self.shear_webs)}")
         self.shear_webs.append(shear_web)
         self.shear_web_refinements[shear_web] = refinement_factor
         self.shear_web_n_elements[shear_web] = (
             n_elements if n_elements is not None else 1
         )
         t1, t2 = shear_web.compute_intersections(self)
-        self.add_hard_point(t1, name=f'{shear_web.name}_hp0')
-        self.add_hard_point(t2, name=f'{shear_web.name}_hp1')
+        self.add_hard_point(t1, name=f"{shear_web.name}_hp0")
+        self.add_hard_point(t2, name=f"{shear_web.name}_hp1")
         self.remesh()  # Update mesh to include new hard points
         self.logger.debug(f"Shear web added with intersections at t={t1}, t={t2}")
 

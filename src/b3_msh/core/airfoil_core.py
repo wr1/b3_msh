@@ -22,7 +22,7 @@ class AirfoilCore:
         self.position = np.array(position)
         self.rotation = rotation  # degrees, around z-axis
         self.hard_points = [0.0, 1.0]  # Default hard points at ends
-        self.hard_point_names = {0.0: 'leading_edge', 1.0: 'trailing_edge'}
+        self.hard_point_names = {0.0: "leading_edge", 1.0: "trailing_edge"}
         self.shear_webs = []  # List of ShearWeb instances
         self.shear_web_refinements = {}  # Dict of shear_web to refinement_factor
         self.shear_web_n_elements = {}  # Dict of shear_web to n_elements
@@ -30,7 +30,9 @@ class AirfoilCore:
         self.current_points = None
         self._build_spline()
         self.remesh(self.current_t)  # Initial mesh
-        self.logger.debug(f"AirfoilCore initialized with {len(self.original_points)} points")
+        self.logger.debug(
+            f"AirfoilCore initialized with {len(self.original_points)} points"
+        )
 
     def _build_spline(self):
         """Build PCHIP splines for x, y, z from original points."""
