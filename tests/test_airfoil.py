@@ -1,6 +1,6 @@
 import numpy as np
-from afmesh.core.airfoil import Airfoil
-from afmesh.utils.utils import process_airfoils_parallel
+from b3_msh.core.airfoil import Airfoil
+from b3_msh.utils.utils import process_airfoils_parallel
 
 
 def dummy_func(af):
