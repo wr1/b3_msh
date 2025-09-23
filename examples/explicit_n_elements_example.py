@@ -28,9 +28,10 @@ af.plot(show_hard_points=True, save_path="explicit_n_elements_airfoil.png")
 mesh = af.to_pyvista()
 mesh.save("explicit_n_elements_output.vtp")
 print(f"Mesh saved with {mesh.n_points} points and {mesh.n_cells} cells")
+print(f"Point data keys: {list(mesh.point_data.keys())}")
 
 # Optionally, add a shear web and remesh again
-sw = ShearWeb({"type": "plane", "origin": (0.5, 0, 0), "normal": (1, 0, 0)})
+sw = ShearWeb({"type": "plane", "origin": (0.5, 0, 0), "normal": (1, 0, 0), "name": "additional_web"})
 af.add_shear_web(sw, n_elements=5)
 
 # Now panels are more: depending on intersections

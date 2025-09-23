@@ -4,23 +4,27 @@ import numpy as np
 class AirfoilMesh:
     """Meshing functionality for Airfoil, including hard points, panels, and remeshing."""
 
-    def add_hard_point(self, t):
+    def add_hard_point(self, t, name=None):
         """Add a hard point at parametric t."""
         if 0 <= t <= 1 and t not in self.hard_points:
             self.hard_points.append(t)
             self.hard_points.sort()
+            if name is None:
+                name = f'hp{len(self.hard_point_names)}'
+            self.hard_point_names[t] = name
             self.remesh()  # Update mesh to include new hard points
 
     def add_shear_web(self, shear_web, refinement_factor=1.0, n_elements=None):
         """Add a shear web, which adds hard points at intersections."""
+        shear_web.name = shear_web.definition.get('name', f'web{len(self.shear_webs)}')
         self.shear_webs.append(shear_web)
         self.shear_web_refinements[shear_web] = refinement_factor
         self.shear_web_n_elements[shear_web] = (
             n_elements if n_elements is not None else 1
         )
         t1, t2 = shear_web.compute_intersections(self)
-        self.add_hard_point(t1)
-        self.add_hard_point(t2)
+        self.add_hard_point(t1, name=f'{shear_web.name}_hp0')
+        self.add_hard_point(t2, name=f'{shear_web.name}_hp1')
         self.remesh()  # Update mesh to include new hard points
 
     def get_panels(self):
@@ -49,9 +53,11 @@ class AirfoilMesh:
                 else:
                     n_elem = n_elements_per_panel[p_idx]
                 t_panel = np.linspace(t_start, t_end, n_elem + 1)
-                t_vals.extend(t_panel[:-1])
-            t_vals.append(1.0)
-            t_vals = np.array(t_vals)
+                t_vals.extend(t_panel)
+            t_vals = np.sort(np.unique(t_vals))
+            self.current_t = t_vals
+            self.current_points = self.get_points(t_vals)
+            return
         elif relative_refinement is None and self.shear_web_refinements:
             relative_refinement = {}
             panels = self.get_panels()

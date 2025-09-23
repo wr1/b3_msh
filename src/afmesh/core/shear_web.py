@@ -8,6 +8,7 @@ class ShearWeb:
     def __init__(self, definition):
         """Initialize a ShearWeb."""
         self.definition = definition
+        self.name = None  # Set in add_shear_web
 
     def compute_intersections(self, airfoil):
         """Compute t values where the shear web intersects the airfoil spline."""

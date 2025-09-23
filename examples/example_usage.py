@@ -6,7 +6,7 @@ from afmesh.core.shear_web import ShearWeb
 af = Airfoil.from_xfoil("examples/naca0018.dat")
 
 # Add shear web with refinement
-sw = ShearWeb({"type": "plane", "origin": (0.5, 0, 0), "normal": (1, 0, 0)})
+sw = ShearWeb({"type": "plane", "origin": (0.5, 0, 0), "normal": (1, 0, 0), "name": "spar"})
 af.add_shear_web(sw, refinement_factor=2.0)
 
 # Add trailing edge shear web
@@ -26,6 +26,7 @@ af.plot(show_hard_points=True, save_path="airfoil.png")
 # Export to PyVista
 mesh = af.to_pyvista()
 print(f"Mesh has {mesh.n_points} points and {mesh.n_cells} cells")
+print(f"Point data keys: {list(mesh.point_data.keys())}")
 
 # Write to VTP
 mesh.save("output.vtp")

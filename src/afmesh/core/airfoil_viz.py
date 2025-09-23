@@ -62,14 +62,15 @@ class AirfoilViz:
             cell_start += n_cells_web
         poly.cell_data["panel_id"] = cell_data
         # Add distances from hard points
-        for i, hp in enumerate(sorted(self.hard_points)):
+        for hp in sorted(self.hard_points):
+            name = self.hard_point_names[hp]
             hp_pos = self.get_points([hp])[0]
             abs_distances = np.linalg.norm(airfoil_points - hp_pos, axis=1)
-            poly.point_data[f"abs_dist_hp_{i}"] = np.concatenate(
+            poly.point_data[f"abs_dist_{name}"] = np.concatenate(
                 [abs_distances, np.zeros(len(all_points) - len(airfoil_points))]
             )
             rel_distances = np.abs(self.current_t - hp)
-            poly.point_data[f"rel_dist_hp_{i}"] = np.concatenate(
+            poly.point_data[f"rel_dist_{name}"] = np.concatenate(
                 [rel_distances, np.zeros(len(all_points) - len(airfoil_points))]
             )
         # Compute normal vectors for points

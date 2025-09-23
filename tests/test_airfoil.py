@@ -116,8 +116,8 @@ def test_to_pyvista():
     assert mesh.n_points == len(af.current_points)
     assert "panel_id" in mesh.cell_data
     assert len(mesh.cell_data["panel_id"]) == mesh.n_cells
-    assert "abs_dist_hp_0" in mesh.point_data
-    assert "rel_dist_hp_0" in mesh.point_data
+    assert "abs_dist_leading_edge" in mesh.point_data
+    assert "rel_dist_leading_edge" in mesh.point_data
     assert "Normals" in mesh.point_data
 
 
@@ -139,3 +139,14 @@ def test_process_parallel():
     results = process_airfoils_parallel(airfoils, dummy_func)
     assert len(results) == 2
     assert all(isinstance(r, int) for r in results)
+
+
+def test_named_hard_points():
+    """Test named hard points."""
+    points = np.array([[0, 0], [0.5, 0.1], [1, 0]])
+    af = Airfoil(points)
+    af.add_hard_point(0.5, name='mid')
+    mesh = af.to_pyvista()
+    assert "abs_dist_leading_edge" in mesh.point_data
+    assert "abs_dist_trailing_edge" in mesh.point_data
+    assert "abs_dist_mid" in mesh.point_data

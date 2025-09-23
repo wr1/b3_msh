@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "afmesh"
@@ -21,8 +21,8 @@ dependencies = [
 [project.scripts]
 afmesh = "afmesh.cli.cli:main"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/afmesh"]
 
 [tool.ruff]
 line-length = 88

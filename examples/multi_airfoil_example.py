@@ -9,7 +9,7 @@ import pyvista as pv
 # Function to process each airfoil: add shear web and remesh
 def process_airfoil(af):
     """Process an airfoil by adding shear web and remeshing."""
-    sw_shared = ShearWeb({"type": "plane", "origin": (0.5, 0, 0), "normal": (1, 0, 0)})
+    sw_shared = ShearWeb({"type": "plane", "origin": (0.5, 0, 0), "normal": (1, 0, 0), "name": "shared_spar"})
     af.add_shear_web(sw_shared, n_elements=5)
     # Example: set 20 elements in first panel, 30 in second, etc.
     # Assuming 3 panels after adding shear web
