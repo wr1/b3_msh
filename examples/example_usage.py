@@ -1,12 +1,14 @@
-from afmesh.core.airfoil import Airfoil
-from afmesh.core.shear_web import ShearWeb
+from b3_msh.core.airfoil import Airfoil
+from b3_msh.core.shear_web import ShearWeb
 
 
 # Load NACA0018 from file
 af = Airfoil.from_xfoil("examples/naca0018.dat")
 
 # Add shear web with refinement
-sw = ShearWeb({"type": "plane", "origin": (0.5, 0, 0), "normal": (1, 0, 0), "name": "spar"})
+sw = ShearWeb(
+    {"type": "plane", "origin": (0.5, 0, 0), "normal": (1, 0, 0), "name": "spar"}
+)
 af.add_shear_web(sw, refinement_factor=2.0)
 
 # Add trailing edge shear web
