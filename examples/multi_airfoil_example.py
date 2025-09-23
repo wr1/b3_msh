@@ -1,20 +1,28 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import copy
-from afmesh.core.airfoil import Airfoil
-from afmesh.core.shear_web import ShearWeb
-from afmesh.utils.utils import process_airfoils_parallel
+from b3_msh.core.airfoil import Airfoil
+from b3_msh.core.shear_web import ShearWeb
+from b3_msh.utils.utils import process_airfoils_parallel
 import pyvista as pv
+
 
 # Function to process each airfoil: add shear web and remesh
 def process_airfoil(af):
     """Process an airfoil by adding shear web and remeshing."""
-    sw_shared = ShearWeb({"type": "plane", "origin": (0.5, 0, 0), "normal": (1, 0, 0), "name": "shared_spar"})
+    sw_shared = ShearWeb(
+        {
+            "type": "plane",
+            "origin": (0.5, 0, 0),
+            "normal": (1, 0, 0),
+            "name": "shared_spar",
+        }
+    )
     af.add_shear_web(sw_shared, n_elements=5)
     # Example: set 20 elements in first panel, 30 in second, etc.
     # Assuming 3 panels after adding shear web
     af.remesh(n_elements_per_panel={0: 20, 1: 30, 2: 25})
     return af
+
 
 # Load base airfoil
 base_af = Airfoil.from_xfoil("examples/naca0018.dat")
@@ -35,14 +43,26 @@ for i in range(n_airfoils):
     # Linear interpolation between the three
     if t <= 0.5:
         t_local = t * 2  # 0 to 1 between first and second
-        chord = base_airfoils[0]["chord"] + t_local * (base_airfoils[1]["chord"] - base_airfoils[0]["chord"])
-        position = base_airfoils[0]["position"] + t_local * (base_airfoils[1]["position"] - base_airfoils[0]["position"])
-        rotation = base_airfoils[0]["rotation"] + t_local * (base_airfoils[1]["rotation"] - base_airfoils[0]["rotation"])
+        chord = base_airfoils[0]["chord"] + t_local * (
+            base_airfoils[1]["chord"] - base_airfoils[0]["chord"]
+        )
+        position = base_airfoils[0]["position"] + t_local * (
+            base_airfoils[1]["position"] - base_airfoils[0]["position"]
+        )
+        rotation = base_airfoils[0]["rotation"] + t_local * (
+            base_airfoils[1]["rotation"] - base_airfoils[0]["rotation"]
+        )
     else:
         t_local = (t - 0.5) * 2  # 0 to 1 between second and third
-        chord = base_airfoils[1]["chord"] + t_local * (base_airfoils[2]["chord"] - base_airfoils[1]["chord"])
-        position = base_airfoils[1]["position"] + t_local * (base_airfoils[2]["position"] - base_airfoils[1]["position"])
-        rotation = base_airfoils[1]["rotation"] + t_local * (base_airfoils[2]["rotation"] - base_airfoils[1]["rotation"])
+        chord = base_airfoils[1]["chord"] + t_local * (
+            base_airfoils[2]["chord"] - base_airfoils[1]["chord"]
+        )
+        position = base_airfoils[1]["position"] + t_local * (
+            base_airfoils[2]["position"] - base_airfoils[1]["position"]
+        )
+        rotation = base_airfoils[1]["rotation"] + t_local * (
+            base_airfoils[2]["rotation"] - base_airfoils[1]["rotation"]
+        )
     af = copy.deepcopy(base_af)
     af.chord = chord
     af.position = position
@@ -60,6 +80,8 @@ for i, af in enumerate(processed_airfoils):
 
 # Save all to a single VTM file
 multi_block.save("airfoils_30_sections.vtm")
-print("Saved 30 interpolated airfoils with shared shear web processed in parallel to airfoils_30_sections.vtm")
+print(
+    "Saved 30 interpolated airfoils with shared shear web processed in parallel to airfoils_30_sections.vtm"
+)
 
 print("30 interpolated airfoils with shared shear web processed in parallel.")
