@@ -1,7 +1,5 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from afmesh.core.airfoil import Airfoil
-from afmesh.core.shear_web import ShearWeb
+from b3_msh.core.airfoil import Airfoil
+from b3_msh.core.shear_web import ShearWeb
 
 # Load NACA0018 airfoil
 af = Airfoil.from_xfoil("examples/naca0018.dat")
@@ -31,7 +29,14 @@ print(f"Mesh saved with {mesh.n_points} points and {mesh.n_cells} cells")
 print(f"Point data keys: {list(mesh.point_data.keys())}")
 
 # Optionally, add a shear web and remesh again
-sw = ShearWeb({"type": "plane", "origin": (0.5, 0, 0), "normal": (1, 0, 0), "name": "additional_web"})
+sw = ShearWeb(
+    {
+        "type": "plane",
+        "origin": (0.5, 0, 0),
+        "normal": (1, 0, 0),
+        "name": "additional_web",
+    }
+)
 af.add_shear_web(sw, n_elements=5)
 
 # Now panels are more: depending on intersections
