@@ -1,6 +1,6 @@
 import numpy as np
-from afmesh.core.airfoil import Airfoil
-from afmesh.core.shear_web import ShearWeb
+from b3_msh.core.airfoil import Airfoil
+from b3_msh.core.shear_web import ShearWeb
 
 
 def test_shear_web_plane():
