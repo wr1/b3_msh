@@ -1,5 +1,8 @@
 from b3_msh.core.airfoil import Airfoil
 from b3_msh.core.shear_web import ShearWeb
+from b3_msh.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 # Load NACA0018 airfoil
 af = Airfoil.from_xfoil("examples/naca0018.dat")
@@ -17,7 +20,7 @@ print(f"Panels: {panels}")
 n_elements_dict = {0: 10, 1: 20, 2: 15}
 af.remesh(n_elements_per_panel=n_elements_dict)
 
-print(f"Total points after remesh: {len(af.current_points)}")
+logger.info(f"Total points after remesh: {len(af.current_points)}")
 
 # Plot the airfoil with hard points
 af.plot(show_hard_points=True, save_path="explicit_n_elements_airfoil.png")
@@ -25,8 +28,8 @@ af.plot(show_hard_points=True, save_path="explicit_n_elements_airfoil.png")
 # Export to PyVista
 mesh = af.to_pyvista()
 mesh.save("explicit_n_elements_output.vtp")
-print(f"Mesh saved with {mesh.n_points} points and {mesh.n_cells} cells")
-print(f"Point data keys: {list(mesh.point_data.keys())}")
+logger.info(f"Mesh saved with {mesh.n_points} points and {mesh.n_cells} cells")
+logger.info(f"Point data keys: {list(mesh.point_data.keys())}")
 
 # Optionally, add a shear web and remesh again
 sw = ShearWeb(
@@ -48,10 +51,10 @@ print(f"Panels after adding shear web: {panels_after}")
 n_elements_dict_new = {0: 10, 1: 15, 2: 20, 3: 10}  # Example
 if len(panels_after) == len(n_elements_dict_new):
     af.remesh(n_elements_per_panel=n_elements_dict_new)
-    print(f"Remeshed with shear web, total points: {len(af.current_points)}")
+    logger.info(f"Remeshed with shear web, total points: {len(af.current_points)}")
     af.plot(show_hard_points=True, save_path="explicit_n_elements_with_web.png")
     mesh2 = af.to_pyvista()
     mesh2.save("explicit_n_elements_with_web.vtp")
-    print(f"Mesh with web saved with {mesh2.n_points} points and {mesh2.n_cells} cells")
+    logger.info(f"Mesh with web saved with {mesh2.n_points} points and {mesh2.n_cells} cells")
 else:
-    print("Adjust n_elements_dict to match number of panels")
+    logger.warning("Adjust n_elements_dict to match number of panels")

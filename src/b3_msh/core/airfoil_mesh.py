@@ -8,6 +8,16 @@ class AirfoilMesh:
     def __init__(self):
         self.logger = get_logger(self.__class__.__name__)
 
+    def _arc_length(self, t1, t2, n_samples=1000):
+        """Approximate arc length between t1 and t2."""
+        self.logger.debug(f"Calculating arc length from {t1} to {t2}")
+        t_samples = np.linspace(t1, t2, n_samples)
+        points = self.get_points(t_samples)
+        diffs = np.diff(points, axis=0)
+        length = np.sum(np.sqrt(np.sum(diffs**2, axis=1)))
+        self.logger.debug(f"Arc length: {length}")
+        return length
+
     def add_hard_point(self, t, name=None):
         """Add a hard point at parametric t."""
         if not (0 <= t <= 1):
@@ -125,14 +135,4 @@ class AirfoilMesh:
         all_t = np.sort(np.unique(np.concatenate([t_vals, self.hard_points])))
         self.current_t = all_t
         self.current_points = self.get_points(all_t)
-        self.logger.info(f"Remeshing complete: {len(all_t)} points")
-
-    def _arc_length(self, t1, t2, n_samples=1000):
-        """Approximate arc length between t1 and t2."""
-        self.logger.debug(f"Calculating arc length from {t1} to {t2}")
-        t_samples = np.linspace(t1, t2, n_samples)
-        points = self.get_points(t_samples)
-        diffs = np.diff(points, axis=0)
-        length = np.sum(np.sqrt(np.sum(diffs**2, axis=1)))
-        self.logger.debug(f"Arc length: {length}")
-        return length
+        self.logger.debug(f"Remeshing complete: {len(all_t)} points")

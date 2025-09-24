@@ -1,16 +1,13 @@
 import logging
 import sys
+from rich.logging import RichHandler
 
 
 def get_logger(name):
     """Get a configured logger for the given name."""
     logger = logging.getLogger(name)
     if not logger.handlers:
-        handler = logging.StreamHandler(sys.stdout)
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
-        handler.setFormatter(formatter)
+        handler = RichHandler(rich_tracebacks=True, markup=True, show_time=False)
         logger.setLevel(logging.INFO)  # Default level changed to INFO for output
         logger.addHandler(handler)
     return logger

@@ -179,7 +179,7 @@ class AirfoilViz:
                 )
         if save_path:
             plt.savefig(save_path)
-            print(f"Plot saved to {save_path}")
+            self.logger.info(f"Plot saved to {save_path}")
         if show and save_path is None:
             plt.show()
         self.logger.debug("Plotting complete")

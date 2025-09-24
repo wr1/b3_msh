@@ -4,7 +4,9 @@ from b3_msh.core.airfoil import Airfoil
 from b3_msh.core.shear_web import ShearWeb
 from b3_msh.utils.utils import process_airfoils_parallel
 import pyvista as pv
+from b3_msh.utils.logger import get_logger
 
+logger = get_logger(__name__)
 
 # Function to process each airfoil: add shear web and remesh
 def process_airfoil(af):
@@ -80,8 +82,8 @@ for i, af in enumerate(processed_airfoils):
 
 # Save all to a single VTM file
 multi_block.save("airfoils_30_sections.vtm")
-print(
+logger.info(
     "Saved 30 interpolated airfoils with shared shear web processed in parallel to airfoils_30_sections.vtm"
 )
 
-print("30 interpolated airfoils with shared shear web processed in parallel.")
+logger.info("30 interpolated airfoils with shared shear web processed in parallel.")

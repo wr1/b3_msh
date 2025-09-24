@@ -1,6 +1,8 @@
 from b3_msh.core.airfoil import Airfoil
 from b3_msh.core.shear_web import ShearWeb
+from b3_msh.utils.logger import get_logger
 
+logger = get_logger(__name__)
 
 # Load NACA0018 from file
 af = Airfoil.from_xfoil("examples/naca0018.dat")
@@ -27,12 +29,12 @@ af.plot(show_hard_points=True, save_path="airfoil.png")
 
 # Export to PyVista
 mesh = af.to_pyvista()
-print(f"Mesh has {mesh.n_points} points and {mesh.n_cells} cells")
-print(f"Point data keys: {list(mesh.point_data.keys())}")
+logger.info(f"Mesh has {mesh.n_points} points and {mesh.n_cells} cells")
+logger.info(f"Point data keys: {list(mesh.point_data.keys())}")
 
 # Write to VTP
 mesh.save("output.vtp")
-print("Mesh saved to output.vtp")
+logger.info("Mesh saved to output.vtp")
 
 # Example with NACA0018 from file and hard points at t=0.3 and t=0.7
 af_naca = Airfoil.from_xfoil("examples/naca0018.dat")
@@ -43,6 +45,6 @@ af_naca.remesh(n_elements_per_panel=[12, 25, 5])
 af_naca.plot(show_hard_points=True, save_path="airfoil_naca.png")
 
 # Example with meshed shear webs
-print("Shear webs are included in the mesh and plot above.")
+logger.info("Shear webs are included in the mesh and plot above.")
 
 # For multi-airfoil example with parallel processing, see multi_airfoil_example.py

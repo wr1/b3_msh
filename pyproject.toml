@@ -20,6 +20,7 @@ dependencies = [
     "pydantic",
     "statesman @ git+https://github.com/wr1/statesman.git",
     "pyyaml",
+    "rich",
 ]
 
 [project.scripts]
@@ -39,6 +40,7 @@ target-version = "py38"
 select = ["E", "F", "W", "C90"]
 ignore = []
 
-[tool.pytest.ini_options]
-addopts = "--cov=b3_msh "
-testpaths = ["tests"]
+# [pytest.ini_options]
+# addopts = "--cov=b3_msh "
+# testpaths = ["tests"]
+# pythonpath = ["src"]
