@@ -1,9 +1,11 @@
 #set page(margin: 1in)
 #set text(font: "New Computer Modern", size: 12pt)
 
-= afmesh
+= b3_msh
 
-afmesh is a python library for handling line meshes representing airfoils with internal structure (like shear webs)
+// author wr1 <8971152+wr1@users.noreply.github.com> 
+
+b3_msh is a python library for handling line meshes representing airfoils with internal structure (like shear webs)
 
 base of the airfoil is a xfoil style point list with x-y (and z) coordinates
 
@@ -49,3 +51,6 @@ internally this is interpolated using a spline, which has parametric coordinate 
 - pytest and --cov 
 - matplotlib for plotting
 - multiprocessing on airfoil level, allowing handling of many airfoils in parallel    
+
+
+

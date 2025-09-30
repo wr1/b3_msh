@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "b3_msh"
 version = "0.1.0"
 description = "A Python library for handling line meshes representing airfoils with internal structure."
-authors = [{name = "Your Name", email = "your.email@example.com"}]
+authors = [{name = "wr1", email = "8971152+wr1@users.noreply.github.com"}]
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
