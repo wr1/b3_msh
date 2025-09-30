@@ -67,7 +67,7 @@ def main():
     logger = get_logger(__name__)
     logger.info("Starting blade remeshing")
 
-    config_path = "examples/blade_test.yml"
+    config_path = "config/data/blade_test.yml"
     logger.info(f"Loading config from {config_path}")
     config = load_yaml_config(config_path)
 
@@ -75,7 +75,13 @@ def main():
 
     workdir = config["workdir"]
     mesh_config = config["mesh"]
-    z_sections = mesh_config["z"]
+    z_specs = mesh_config["z"]
+    z_values = []
+    for z_spec in z_specs:
+        if z_spec["type"] == "plain":
+            z_values.extend(z_spec["values"])
+        elif z_spec["type"] == "linspace":
+            z_values.extend(np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"]))
     chordwise_mesh = mesh_config["chordwise"]
     webs_config = config["structure"]["webs"]
 
@@ -87,7 +93,7 @@ def main():
     logger.info("Processing sections")
     # Process each section
     sections = []
-    for z in z_sections:
+    for z in z_values:
         af = process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
         sections.append(af)
 

@@ -1,3 +1,4 @@
+"""b3_msh package initialization."""
 from .core.airfoil import Airfoil
 from .core.shear_web import ShearWeb
 from .utils.utils import process_airfoils_parallel

@@ -1,3 +1,4 @@
+"""Represents a shear web defined by a plane, line, or trailing edge, computing intersections with the airfoil."""
 import numpy as np
 from scipy.optimize import brentq
 from ..utils.logger import get_logger

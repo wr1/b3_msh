@@ -1,3 +1,4 @@
+"""Statesman step for running b3_msh blade processing."""
 import os
 import numpy as np
 import pyvista as pv

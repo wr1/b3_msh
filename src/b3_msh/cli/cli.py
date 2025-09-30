@@ -1,3 +1,4 @@
+"""Command-line interface for b3_msh."""
 import logging
 import numpy as np
 from ..core.airfoil import Airfoil
