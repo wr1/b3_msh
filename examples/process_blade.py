@@ -5,7 +5,7 @@ import pyvista as pv
 from b3_msh.core.airfoil import Airfoil
 from b3_msh.core.shear_web import ShearWeb
 from b3_msh.utils.logger import get_logger
-from b3_msh.utils.blade_processing import process_section_from_mesh
+from b3_msh.core.blade_processing import process_section_from_mesh
 
 
 def load_yaml_config(config_path):

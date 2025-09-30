@@ -7,7 +7,7 @@ import pyvista as pv
 from ..core.airfoil import Airfoil
 from ..core.shear_web import ShearWeb
 from ..utils.logger import get_logger
-from ..utils.blade_processing import process_section_from_mesh
+from ..core.blade_processing import process_section_from_mesh
 
 
 def plot(

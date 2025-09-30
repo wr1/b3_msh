@@ -1,8 +1,8 @@
-"""Utilities for processing blade sections."""
+"""Core functionality for processing blade sections."""
 import numpy as np
-from ..core.airfoil import Airfoil
-from ..core.shear_web import ShearWeb
-from .logger import get_logger
+from .airfoil import Airfoil
+from .shear_web import ShearWeb
+from ..utils.logger import get_logger
 
 
 def process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger):
