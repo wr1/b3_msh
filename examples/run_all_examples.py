@@ -11,16 +11,17 @@ examples = [
     "explicit_n_elements_example.py",
 ]
 
-# Change to examples directory
-examples_dir = os.path.dirname(__file__)
-os.chdir(examples_dir)
+# Run from the project root directory
+project_root = os.path.dirname(os.path.dirname(__file__))
+os.chdir(project_root)
 
 for ex in examples:
-    print(f"Running {ex}...")
-    result = subprocess.run([sys.executable, ex])
+    ex_path = os.path.join("examples", ex)
+    print(f"Running {ex_path}...")
+    result = subprocess.run([sys.executable, ex_path])
     if result.returncode != 0:
-        print(f"Failed to run {ex} with return code {result.returncode}")
+        print(f"Failed to run {ex_path} with return code {result.returncode}")
         sys.exit(1)
-    print(f"{ex} completed successfully.\n")
+    print(f"{ex_path} completed successfully.\n")
 
 print("All examples ran successfully!")

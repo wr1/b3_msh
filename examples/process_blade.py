@@ -46,7 +46,7 @@ def main():
     logger.info("Processing sections")
     # Process each section
     sections = []
-    for z in z_sections:
+    for z in z_values:
         af = process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
         sections.append(af)
 
