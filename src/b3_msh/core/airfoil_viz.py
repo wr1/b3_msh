@@ -96,6 +96,8 @@ class AirfoilViz:
         poly.point_data["w"] = np.concatenate(
             [np.full(len(airfoil_points), np.nan), web_w]
         )
+        # Add z values
+        poly.point_data["z"] = all_points[:, 2]
         # Compute normal vectors for points
         normals_point = []
         for i in range(len(all_points)):
