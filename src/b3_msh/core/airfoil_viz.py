@@ -1,4 +1,5 @@
 """Visualization functionality for Airfoil, including plotting and PyVista export."""
+
 import numpy as np
 import pyvista as pv
 import matplotlib.pyplot as plt

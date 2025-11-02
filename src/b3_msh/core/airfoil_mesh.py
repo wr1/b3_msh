@@ -1,4 +1,5 @@
 """Meshing functionality for Airfoil, including hard points, panels, and remeshing."""
+
 import numpy as np
 from ..utils.logger import get_logger
 

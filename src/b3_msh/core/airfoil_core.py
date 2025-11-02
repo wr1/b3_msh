@@ -1,4 +1,5 @@
 """Core functionality for Airfoil initialization, spline building, and transformations."""
+
 import numpy as np
 from scipy.interpolate import PchipInterpolator
 from ..utils.logger import get_logger

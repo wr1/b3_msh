@@ -112,6 +112,12 @@ blade_cmd = command(
     ],
     options=[
         option(
+            flags=["--output-format"],
+            arg_type=str,
+            default="vtp",
+            help="Output format: 'vtp' for merged PolyData or 'vtm' for MultiBlock.",
+        ),
+        option(
             flags=["--verbose", "-v"],
             arg_type=bool,
             default=False,

@@ -2,8 +2,6 @@ import os
 import yaml
 import numpy as np
 import pyvista as pv
-from b3_msh.core.airfoil import Airfoil
-from b3_msh.core.shear_web import ShearWeb
 from b3_msh.utils.logger import get_logger
 from b3_msh.core.blade_processing import process_section_from_mesh
 
@@ -33,7 +31,9 @@ def main():
         if z_spec["type"] == "plain":
             z_values.extend(z_spec["values"])
         elif z_spec["type"] == "linspace":
-            z_values.extend(np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"]))
+            z_values.extend(
+                np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"])
+            )
     logger.info(f"Found z sections: {np.round(z_values, 2).tolist()}")
     chordwise_mesh = mesh_config["chordwise"]
     webs_config = config["structure"]["webs"]

@@ -1,14 +1,14 @@
 """Statesman step for running b3_msh blade processing."""
+
 import os
 import numpy as np
 import pyvista as pv
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List, Dict, Any
 from statesman.core.base import Statesman, ManagedFile
 from .core.airfoil import Airfoil
 from .core.shear_web import ShearWeb
 from .utils.logger import get_logger
-from .core.blade_processing import process_section_from_mesh
 
 
 class Planform(BaseModel):
@@ -96,7 +96,9 @@ class B3MshStep(Statesman):
         # Process each section
         sections = []
         for z in z_sections:
-            af = self.process_section_from_mesh(mesh, z, chordwise_mesh.model_dump(), webs_config, logger)
+            af = self.process_section_from_mesh(
+                mesh, z, chordwise_mesh.model_dump(), webs_config, logger
+            )
             sections.append(af)
 
         logger.info("Creating new MultiBlock mesh")
@@ -127,7 +129,9 @@ class B3MshStep(Statesman):
         points_2d = sorted_points[:, :2]  # Take x,y
 
         # Create Airfoil from points
-        af = Airfoil(points_2d, is_normalized=False, position=(0, 0, z))  # Position at z
+        af = Airfoil(
+            points_2d, is_normalized=False, position=(0, 0, z)
+        )  # Position at z
 
         # Add shear webs if applicable
         for web in webs_config:

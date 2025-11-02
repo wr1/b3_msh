@@ -8,6 +8,7 @@ from b3_msh.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 # Function to process each airfoil: add shear web and remesh
 def process_airfoil(af):
     """Process an airfoil by adding shear web and remeshing."""

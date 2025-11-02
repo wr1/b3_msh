@@ -1,5 +1,4 @@
 import numpy as np
-import pyvista as pv
 from unittest.mock import Mock
 from b3_msh.core.blade_processing import process_section_from_mesh
 from b3_msh.core.airfoil import Airfoil
@@ -9,10 +8,16 @@ from b3_msh.utils.logger import get_logger
 def test_process_section_from_mesh_basic():
     """Test basic section processing from mesh."""
     # Create a mock mesh with points at z=0 and z=1
-    points = np.array([
-        [0, 0, 0], [0.5, 0.1, 0], [1, 0, 0],  # z=0
-        [0, 0, 1], [0.5, 0.1, 1], [1, 0, 1],  # z=1
-    ])
+    points = np.array(
+        [
+            [0, 0, 0],
+            [0.5, 0.1, 0],
+            [1, 0, 0],  # z=0
+            [0, 0, 1],
+            [0.5, 0.1, 1],
+            [1, 0, 1],  # z=1
+        ]
+    )
     t_values = np.array([0, 0.5, 1, 0, 0.5, 1])
     mock_mesh = Mock()
     mock_mesh.points = points
@@ -30,10 +35,16 @@ def test_process_section_from_mesh_basic():
 
 def test_process_section_from_mesh_with_webs():
     """Test section processing with shear webs."""
-    points = np.array([
-        [0, 0, 0], [0.5, 0.1, 0], [1, 0, 0],  # z=0
-        [0, 0, 1], [0.5, 0.1, 1], [1, 0, 1],  # z=1
-    ])
+    points = np.array(
+        [
+            [0, 0, 0],
+            [0.5, 0.1, 0],
+            [1, 0, 0],  # z=0
+            [0, 0, 1],
+            [0.5, 0.1, 1],
+            [1, 0, 1],  # z=1
+        ]
+    )
     t_values = np.array([0, 0.5, 1, 0, 0.5, 1])
     mock_mesh = Mock()
     mock_mesh.points = points
@@ -60,10 +71,16 @@ def test_process_section_from_mesh_with_webs():
 
 def test_process_section_from_mesh_z_out_of_range():
     """Test that webs are not added if z is out of range."""
-    points = np.array([
-        [0, 0, 0], [0.5, 0.1, 0], [1, 0, 0],  # z=0
-        [0, 0, 1], [0.5, 0.1, 1], [1, 0, 1],  # z=1
-    ])
+    points = np.array(
+        [
+            [0, 0, 0],
+            [0.5, 0.1, 0],
+            [1, 0, 0],  # z=0
+            [0, 0, 1],
+            [0.5, 0.1, 1],
+            [1, 0, 1],  # z=1
+        ]
+    )
     t_values = np.array([0, 0.5, 1, 0, 0.5, 1])
     mock_mesh = Mock()
     mock_mesh.points = points
@@ -89,10 +106,16 @@ def test_process_section_from_mesh_z_out_of_range():
 
 def test_process_section_from_mesh_no_mesh_flag():
     """Test that webs are not added if mesh flag is False."""
-    points = np.array([
-        [0, 0, 0], [0.5, 0.1, 0], [1, 0, 0],  # z=0
-        [0, 0, 1], [0.5, 0.1, 1], [1, 0, 1],  # z=1
-    ])
+    points = np.array(
+        [
+            [0, 0, 0],
+            [0.5, 0.1, 0],
+            [1, 0, 0],  # z=0
+            [0, 0, 1],
+            [0.5, 0.1, 1],
+            [1, 0, 1],  # z=1
+        ]
+    )
     t_values = np.array([0, 0.5, 1, 0, 0.5, 1])
     mock_mesh = Mock()
     mock_mesh.points = points

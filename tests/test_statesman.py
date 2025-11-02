@@ -1,7 +1,6 @@
-import pytest
 import numpy as np
 from unittest.mock import Mock, patch
-from b3_msh.statesman_step import B3MshStep
+from b3_msh.statesman.statesman_step import B3MshStep
 
 
 def test_b3msh_step_attributes():
@@ -11,7 +10,12 @@ def test_b3msh_step_attributes():
     assert B3MshStep.input_files[0].name == "b3_geo/lm1_mesh.vtp"
     assert B3MshStep.input_files[0].non_empty == True
     assert B3MshStep.output_files == ["b3_msh/lm2.vtm"]
-    assert set(B3MshStep.dependent_sections) == {"geometry", "airfoils", "structure", "mesh"}
+    assert set(B3MshStep.dependent_sections) == {
+        "geometry",
+        "airfoils",
+        "structure",
+        "mesh",
+    }
 
 
 def test_b3msh_step_execute():
@@ -35,19 +39,28 @@ def test_b3msh_step_execute():
         },
         "airfoils": [],
         "structure": {"webs": []},
-        "mesh": {"z": [0.0, 1.0], "chordwise": {"default": {"n_elem": 10}, "panels": []}},
+        "mesh": {
+            "z": [0.0, 1.0],
+            "chordwise": {"default": {"n_elem": 10}, "panels": []},
+        },
     }
     step.config = mock_config
     # Mock logger
     step.logger = Mock()
     # Mock mesh
     mock_mesh = Mock()
-    mock_mesh.points = np.array([[0, 0, 0], [1, 0, 0], [0.5, 0.1, 0], [0, 0, 1], [1, 0, 1], [0.5, 0.1, 1]])
+    mock_mesh.points = np.array(
+        [[0, 0, 0], [1, 0, 0], [0.5, 0.1, 0], [0, 0, 1], [1, 0, 1], [0.5, 0.1, 1]]
+    )
     mock_mesh.point_data = {"t": np.array([0, 0.5, 1, 0, 0.5, 1])}
     # Mock pv.read
-    with patch('b3_msh.statesman_step.pv.read', return_value=mock_mesh) as mock_read, \
-         patch('b3_msh.statesman_step.pv.MultiBlock') as mock_multiblock, \
-         patch('b3_msh.statesman_step.os.makedirs') as mock_makedirs:
+    with patch(
+        "b3_msh.statesman.statesman_step.pv.read", return_value=mock_mesh
+    ) as mock_read, patch(
+        "b3_msh.statesman.statesman_step.pv.MultiBlock"
+    ) as mock_multiblock, patch(
+        "b3_msh.statesman.statesman_step.os.makedirs"
+    ) as mock_makedirs:
         mock_mb_instance = Mock()
         mock_multiblock.return_value = mock_mb_instance
         # Call _execute

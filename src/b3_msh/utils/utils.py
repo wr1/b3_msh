@@ -1,4 +1,5 @@
 """Process a list of Airfoil instances in parallel."""
+
 from multiprocessing import Pool
 
 
