@@ -6,9 +6,9 @@ import pyvista as pv
 from pydantic import BaseModel
 from typing import List, Dict, Any
 from statesman.core.base import Statesman, ManagedFile
-from .core.airfoil import Airfoil
-from .core.shear_web import ShearWeb
-from .utils.logger import get_logger
+from ..core.airfoil import Airfoil
+from ..core.shear_web import ShearWeb
+from ..utils.logger import get_logger
 
 
 class Planform(BaseModel):
