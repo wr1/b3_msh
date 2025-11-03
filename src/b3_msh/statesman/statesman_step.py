@@ -1,14 +1,14 @@
-"""Statesman step for running b3_msh blade processing."""
-
-import os
 import numpy as np
-import pyvista as pv
+from pathlib import Path
+from statesman import Statesman
+from statesman.core.base import ManagedFile
 from pydantic import BaseModel
 from typing import List, Dict, Any
-from statesman.core.base import Statesman, ManagedFile
+from ..utils.logger import get_logger
 from ..core.airfoil import Airfoil
 from ..core.shear_web import ShearWeb
-from ..utils.logger import get_logger
+import pyvista as pv
+import os
 
 
 class Planform(BaseModel):
@@ -72,25 +72,37 @@ class B3MshStep(Statesman):
     input_files = [
         ManagedFile(name="b3_geo/lm1_mesh.vtp", non_empty=True),
     ]
-    output_files = ["b3_msh/lm2.vtm"]
+    output_files = ["b3_msh/lm2.vtp"]
     dependent_sections = ["geometry", "airfoils", "structure", "mesh"]
 
     def _execute(self):
         self.logger.info("Executing B3MshStep: Processing blade mesh.")
+        # Expand mesh.z from specs to list of floats
+        mesh_z = []
+        for z_spec in self.config['mesh']['z']:
+            if z_spec["type"] == "plain":
+                mesh_z.extend(z_spec["values"])
+            elif z_spec["type"] == "linspace":
+                mesh_z.extend(np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"]))
+        self.config['mesh']['z'] = sorted(list(set(mesh_z)))
+        
         # Validate config
         config_model = Config(**self.config)
         logger = get_logger(__name__)
 
-        workdir = config_model.workdir
+        config_dir = Path(self.config_path).parent
+        workdir = config_dir / config_model.workdir
         mesh_config = config_model.mesh
         z_sections = mesh_config.z
         chordwise_mesh = mesh_config.chordwise
         webs_config = config_model.structure.webs
 
         # Load the pre-processed mesh
-        input_path = os.path.join(workdir, "b3_geo", "lm1_mesh.vtp")
+        input_path = workdir / "b3_geo" / "lm1_mesh.vtp"
         logger.info(f"Loading pre-processed mesh from {input_path}")
-        mesh = pv.read(input_path)
+        if not input_path.exists():
+            raise FileNotFoundError(f"Input file {input_path} does not exist. Ensure previous steps have run.")
+        mesh = pv.read(str(input_path))
 
         logger.info("Processing sections")
         # Process each section
@@ -101,18 +113,26 @@ class B3MshStep(Statesman):
             )
             sections.append(af)
 
-        logger.info("Creating new MultiBlock mesh")
-        # Create new MultiBlock
-        new_multi_block = pv.MultiBlock()
-        for i, af in enumerate(sections):
-            mesh_out = af.to_pyvista()
-            new_multi_block.append(mesh_out, f"Section_{i}")
+        logger.info("Merging meshes into single PolyData")
+        # Create meshes
+        meshes = [af.to_pyvista() for af in sections]
+        rmeshes = []
+        # Translate point arrays to cell arrays before merging
+        for mesh in meshes:
+            rmeshes.append(
+                mesh.point_data_to_cell_data(progress_bar=True, pass_point_data=False)
+            )
+            for key in ["Normals", "z"]:
+                if key in mesh.cell_data:
+                    del mesh.cell_data[key]
+        # Merge into single PolyData
+        merged_mesh = pv.merge(rmeshes)
 
-        # Save to VTM (MultiBlock format)
-        output_path = os.path.join(workdir, "b3_msh", "lm2.vtm")
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        logger.info(f"Saving mesh to {output_path}")
-        new_multi_block.save(output_path)
+        # Save to VTP
+        output_path = workdir / "b3_msh" / "lm2.vtp"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Saving merged mesh to {output_path}")
+        merged_mesh.save(str(output_path))
         logger.info(f"Saved remeshed blade mesh to {output_path}")
 
     def process_section_from_mesh(self, mesh, z, chordwise_mesh, webs_config, logger):
