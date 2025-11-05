@@ -9,7 +9,7 @@ def test_b3msh_step_attributes():
     assert len(B3MshStep.input_files) == 1
     assert B3MshStep.input_files[0].name == "b3_geo/lm1_mesh.vtp"
     assert B3MshStep.input_files[0].non_empty == True
-    assert B3MshStep.output_files == ["b3_msh/lm2.vtm"]
+    assert B3MshStep.output_files == ["b3_msh/lm2.vtp"]
     assert set(B3MshStep.dependent_sections) == {
         "geometry",
         "airfoils",
@@ -21,6 +21,7 @@ def test_b3msh_step_attributes():
 def test_b3msh_step_execute():
     """Test B3MshStep _execute method with mocked dependencies."""
     step = object.__new__(B3MshStep)
+    step.config_path = "/tmp/config.yml"
     # Mock config
     mock_config = {
         "workdir": "/tmp/test",
@@ -40,7 +41,7 @@ def test_b3msh_step_execute():
         "airfoils": [],
         "structure": {"webs": []},
         "mesh": {
-            "z": [0.0, 1.0],
+            "z": [{"type": "plain", "values": [0.0, 1.0]}],
             "chordwise": {"default": {"n_elem": 10}, "panels": []},
         },
     }
@@ -53,6 +54,12 @@ def test_b3msh_step_execute():
         [[0, 0, 0], [1, 0, 0], [0.5, 0.1, 0], [0, 0, 1], [1, 0, 1], [0.5, 0.1, 1]]
     )
     mock_mesh.point_data = {"t": np.array([0, 0.5, 1, 0, 0.5, 1])}
+    mock_mesh.cell_data = {}
+    mock_mesh.point_data_to_cell_data = Mock(return_value=mock_mesh)
+    mock_mesh.save = Mock()
+    mock_af = Mock()
+    mock_af.to_pyvista = Mock(return_value=mock_mesh)
+    step.process_section_from_mesh = Mock(return_value=mock_af)
     # Mock pv.read
     with patch(
         "b3_msh.statesman.statesman_step.pv.read", return_value=mock_mesh
@@ -60,13 +67,18 @@ def test_b3msh_step_execute():
         "b3_msh.statesman.statesman_step.pv.MultiBlock"
     ) as mock_multiblock, patch(
         "b3_msh.statesman.statesman_step.os.makedirs"
-    ) as mock_makedirs:
+    ) as mock_makedirs, patch(
+        "pathlib.Path.exists", return_value=True
+    ), patch(
+        "b3_msh.statesman.statesman_step.pv.merge", return_value=mock_mesh
+    ) as mock_merge:
         mock_mb_instance = Mock()
         mock_multiblock.return_value = mock_mb_instance
         # Call _execute
         step._execute()
         # Check that read was called
         mock_read.assert_called_once()
-        # Check that MultiBlock was created and save called
-        mock_multiblock.assert_called_once()
-        mock_mb_instance.save.assert_called_once()
+        # Check that merge was called
+        mock_merge.assert_called_once()
+        # Check that save was called
+        mock_mesh.save.assert_called_once()

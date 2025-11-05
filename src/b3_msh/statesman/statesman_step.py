@@ -120,7 +120,7 @@ class B3MshStep(Statesman):
         # Translate point arrays to cell arrays before merging
         for mesh in meshes:
             rmeshes.append(
-                mesh.point_data_to_cell_data(progress_bar=True, pass_point_data=False)
+                mesh.point_data_to_cell_data(progress_bar=False, pass_point_data=False)
             )
             for key in ["Normals", "z"]:
                 if key in mesh.cell_data:
