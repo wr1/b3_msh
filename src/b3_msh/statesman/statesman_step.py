@@ -2,13 +2,12 @@ import numpy as np
 from pathlib import Path
 from statesman import Statesman
 from statesman.core.base import ManagedFile
-from pydantic import BaseModel
-from typing import List, Dict, Any
 from ..utils.logger import get_logger
 from ..core.airfoil import Airfoil
 from ..core.shear_web import ShearWeb
 import pyvista as pv
-import os
+from pydantic import BaseModel
+from typing import List, Dict, Any
 
 
 class Planform(BaseModel):
@@ -79,13 +78,15 @@ class B3MshStep(Statesman):
         self.logger.info("Executing B3MshStep: Processing blade mesh.")
         # Expand mesh.z from specs to list of floats
         mesh_z = []
-        for z_spec in self.config['mesh']['z']:
+        for z_spec in self.config["mesh"]["z"]:
             if z_spec["type"] == "plain":
                 mesh_z.extend(z_spec["values"])
             elif z_spec["type"] == "linspace":
-                mesh_z.extend(np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"]))
-        self.config['mesh']['z'] = sorted(list(set(mesh_z)))
-        
+                mesh_z.extend(
+                    np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"])
+                )
+        self.config["mesh"]["z"] = sorted(list(set(mesh_z)))
+
         # Validate config
         config_model = Config(**self.config)
         logger = get_logger(__name__)
@@ -101,7 +102,9 @@ class B3MshStep(Statesman):
         input_path = workdir / "b3_geo" / "lm1_mesh.vtp"
         logger.info(f"Loading pre-processed mesh from {input_path}")
         if not input_path.exists():
-            raise FileNotFoundError(f"Input file {input_path} does not exist. Ensure previous steps have run.")
+            raise FileNotFoundError(
+                f"Input file {input_path} does not exist. Ensure previous steps have run."
+            )
         mesh = pv.read(str(input_path))
 
         logger.info("Processing sections")
@@ -120,19 +123,27 @@ class B3MshStep(Statesman):
         # Translate point arrays to cell arrays before merging
         for mesh in meshes:
             rmeshes.append(
-                mesh.point_data_to_cell_data(progress_bar=False, pass_point_data=False)
+                mesh.point_data_to_cell_data(progress_bar=False, pass_point_data=True)
             )
             for key in ["Normals", "z"]:
                 if key in mesh.cell_data:
                     del mesh.cell_data[key]
         # Merge into single PolyData
         merged_mesh = pv.merge(rmeshes)
+        # Manually concatenate constant fields if present
+        for field in mesh.point_data.keys():
+            if rmeshes and field in rmeshes[0].cell_data:
+                merged_values = np.concatenate(
+                    [rmesh.cell_data[field] for rmesh in rmeshes]
+                )
+                merged_mesh.cell_data[field] = merged_values
 
         # Save to VTP
         output_path = workdir / "b3_msh" / "lm2.vtp"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         logger.info(f"Saving merged mesh to {output_path}")
         merged_mesh.save(str(output_path))
+
         logger.info(f"Saved remeshed blade mesh to {output_path}")
 
     def process_section_from_mesh(self, mesh, z, chordwise_mesh, webs_config, logger):
@@ -152,6 +163,13 @@ class B3MshStep(Statesman):
         af = Airfoil(
             points_2d, is_normalized=False, position=(0, 0, z)
         )  # Position at z
+
+        # Add constant fields from input mesh
+        af.constant_fields = {}
+        for field in mesh.point_data.keys():
+            values = mesh.point_data[field][mask]
+            if np.allclose(values, values[0]):
+                af.constant_fields[field] = values[0]
 
         # Add shear webs if applicable
         for web in webs_config:

@@ -18,12 +18,24 @@ def process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger):
     sorted_points = section_points[sorted_indices]
     points_2d = sorted_points[:, :2]  # Take x,y
 
+    # Get rel_span from mesh
+    rel_span_values = mesh.point_data["rel_span"][mask]
+    rel_span = rel_span_values[0]  # All points at same z have same rel_span
+
     # Create Airfoil from points
     af = Airfoil(points_2d, is_normalized=False, position=(0, 0, z))  # Position at z
+    af.rel_span = rel_span
+
+    # Add constant fields from input mesh
+    af.constant_fields = {}
+    for field in mesh.point_data.keys():
+        values = mesh.point_data[field][mask]
+        if np.allclose(values, values[0]):
+            af.constant_fields[field] = values[0]
 
     # Add shear webs if applicable
     for web in webs_config:
-        if web.get("mesh", False):
+        if web["mesh"]:
             z_range = web["z_range"]
             if z_range[0] <= z <= z_range[1]:
                 sw_def = {

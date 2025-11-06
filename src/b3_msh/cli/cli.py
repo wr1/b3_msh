@@ -1,4 +1,4 @@
-"""Command-line interface for b3_msh."""
+"""CLI entry point using treeparse."""
 
 from treeparse import cli, command, argument, option
 from .commands import plot, remesh, blade
@@ -112,7 +112,7 @@ blade_cmd = command(
     ],
     options=[
         option(
-            flags=["--output-format"],
+            flags=["--output-format", "-O"],
             arg_type=str,
             default="vtp",
             help="Output format: 'vtp' for merged PolyData or 'vtm' for MultiBlock.",

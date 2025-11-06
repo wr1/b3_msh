@@ -37,7 +37,7 @@ class AirfoilViz:
         else:
             all_points = airfoil_points
             web_w = np.array([])
-        n_points = len(all_points)
+        len(all_points)
         lines = []
         # Airfoil lines
         for i in range(len(airfoil_points) - 1):
@@ -49,7 +49,7 @@ class AirfoilViz:
         lines = np.array(lines)
         poly = pv.PolyData(all_points, lines=lines)
         # Add panel id to cells
-        panels = self.get_panels()
+        self.get_panels()
         n_airfoil_cells = len(airfoil_points) - 1
         total_cells = n_airfoil_cells
         for sw in self.shear_webs:
@@ -72,6 +72,10 @@ class AirfoilViz:
             cell_data[cell_start : cell_start + n_cells_web] = panel_id_web
             cell_start += n_cells_web
         poly.cell_data["panel_id"] = cell_data
+        # Add constant fields to cell_data
+        if hasattr(self, "constant_fields"):
+            for field, value in self.constant_fields.items():
+                poly.cell_data[field] = np.full(poly.n_cells, value)
         # Compute cumulative arc lengths
         diffs = np.diff(airfoil_points, axis=0)
         arc_lengths = np.sqrt(np.sum(diffs**2, axis=1))
@@ -99,6 +103,9 @@ class AirfoilViz:
         )
         # Add z values
         poly.point_data["z"] = all_points[:, 2]
+        # Add rel_span if available (for backward compatibility)
+        if self.rel_span is not None:
+            poly.point_data["rel_span"] = np.full(len(all_points), self.rel_span)
         # Compute normal vectors for points
         normals_point = []
         for i in range(len(all_points)):
@@ -121,7 +128,7 @@ class AirfoilViz:
                 # Web point - compute normal in plane of mesh
                 # Find which web this point belongs to
                 web_idx = 0
-                point_idx_in_web = i - len(airfoil_points)
+                i - len(airfoil_points)
                 for sw_idx, (sw, start_idx, n_points_web) in enumerate(web_info):
                     if start_idx <= i < start_idx + n_points_web:
                         web_idx = sw_idx

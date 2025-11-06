@@ -28,6 +28,7 @@ class AirfoilCore:
         self.shear_webs = []  # List of ShearWeb instances
         self.shear_web_refinements = {}  # Dict of shear_web to refinement_factor
         self.shear_web_n_elements = {}  # Dict of shear_web to n_elements
+        self.rel_span = None  # Normalized span position
         self.current_t = np.linspace(0, 1, 100)  # Default t distribution
         self.current_points = None
         self._build_spline()

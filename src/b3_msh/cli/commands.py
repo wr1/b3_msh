@@ -118,13 +118,20 @@ def blade(config: str, output_format: str = "vtp", verbose: bool = False):
         # Translate point arrays to cell arrays before merging
         for mesh in meshes:
             rmeshes.append(
-                mesh.point_data_to_cell_data(progress_bar=False, pass_point_data=False)
+                mesh.point_data_to_cell_data(progress_bar=False, pass_point_data=True)
             )
             for key in ["Normals", "z"]:
                 if key in mesh.cell_data:
                     del mesh.cell_data[key]
         # Merge into single PolyData
         merged_mesh = pv.merge(rmeshes)
+        # Manually concatenate constant fields if present
+        for field in mesh.point_data.keys():
+            if rmeshes and field in rmeshes[0].cell_data:
+                merged_values = np.concatenate(
+                    [rmesh.cell_data[field] for rmesh in rmeshes]
+                )
+                merged_mesh.cell_data[field] = merged_values
 
         # Save to VTP
         output_path = os.path.join(workdir, "b3_msh", "lm2.vtp")
