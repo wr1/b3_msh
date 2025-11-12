@@ -12,9 +12,8 @@ class AirfoilViz:
     def __init__(self):
         self.logger = get_logger(self.__class__.__name__)
 
-    def to_pyvista(self):
-        """Export to PyVista PolyData (line mesh)."""
-        self.logger.debug("Exporting to PyVista")
+    def _create_pyvista_mesh(self):
+        """Create the PyVista PolyData mesh."""
         airfoil_points = self.current_points
         web_points = []
         web_w = []
@@ -37,10 +36,14 @@ class AirfoilViz:
         else:
             all_points = airfoil_points
             web_w = np.array([])
+        return all_points, web_w, web_info
+
+    def _create_lines_and_cells(self, all_points, web_info):
+        """Create lines and cell data for PyVista."""
         len(all_points)
         lines = []
         # Airfoil lines
-        for i in range(len(airfoil_points) - 1):
+        for i in range(len(self.current_points) - 1):
             lines.extend([2, i, i + 1])
         # Shear web lines
         for sw, start_idx, n_points_web in web_info:
@@ -50,7 +53,7 @@ class AirfoilViz:
         poly = pv.PolyData(all_points, lines=lines)
         # Add panel id to cells
         self.get_panels()
-        n_airfoil_cells = len(airfoil_points) - 1
+        n_airfoil_cells = len(self.current_points) - 1
         total_cells = n_airfoil_cells
         for sw in self.shear_webs:
             n = self.shear_web_n_elements[sw]
@@ -72,12 +75,16 @@ class AirfoilViz:
             cell_data[cell_start : cell_start + n_cells_web] = panel_id_web
             cell_start += n_cells_web
         poly.cell_data["panel_id"] = cell_data
+        return poly
+
+    def _add_point_data(self, poly, all_points, web_w, web_info):
+        """Add point data to the mesh."""
         # Add constant fields to cell_data
-        if hasattr(self, "constant_fields"):
+        if hasattr(self, 'constant_fields'):
             for field, value in self.constant_fields.items():
                 poly.cell_data[field] = np.full(poly.n_cells, value)
         # Compute cumulative arc lengths
-        diffs = np.diff(airfoil_points, axis=0)
+        diffs = np.diff(self.current_points, axis=0)
         arc_lengths = np.sqrt(np.sum(diffs**2, axis=1))
         cum_arc = np.cumsum(arc_lengths)
         cum_arc = np.insert(cum_arc, 0, 0)
@@ -87,29 +94,32 @@ class AirfoilViz:
             hp_idx = np.where(np.isclose(self.current_t, hp))[0][0]
             abs_distances = np.abs(cum_arc - cum_arc[hp_idx])
             poly.point_data[f"abs_dist_{name}"] = np.concatenate(
-                [abs_distances, np.zeros(len(all_points) - len(airfoil_points))]
+                [abs_distances, np.zeros(len(all_points) - len(self.current_points))]
             )
             rel_distances = np.abs(self.current_t - hp)
             poly.point_data[f"rel_dist_{name}"] = np.concatenate(
-                [rel_distances, np.zeros(len(all_points) - len(airfoil_points))]
+                [rel_distances, np.zeros(len(all_points) - len(self.current_points))]
             )
         # Add t values
         poly.point_data["t"] = np.concatenate(
-            [self.current_t, np.full(len(all_points) - len(airfoil_points), np.nan)]
+            [self.current_t, np.full(len(all_points) - len(self.current_points), np.nan)]
         )
         # Add w values for webs
         poly.point_data["w"] = np.concatenate(
-            [np.full(len(airfoil_points), np.nan), web_w]
+            [np.full(len(self.current_points), np.nan), web_w]
         )
         # Add z values
         poly.point_data["z"] = all_points[:, 2]
         # Add rel_span if available (for backward compatibility)
         if self.rel_span is not None:
             poly.point_data["rel_span"] = np.full(len(all_points), self.rel_span)
-        # Compute normal vectors for points
+        return poly
+
+    def _add_normals(self, poly, all_points, web_info):
+        """Add normal vectors to point data."""
         normals_point = []
         for i in range(len(all_points)):
-            if i < len(airfoil_points):
+            if i < len(self.current_points):
                 # Airfoil point
                 t = self.current_t[i]
                 dx = self.spline_x.derivative()(t)
@@ -128,7 +138,7 @@ class AirfoilViz:
                 # Web point - compute normal in plane of mesh
                 # Find which web this point belongs to
                 web_idx = 0
-                i - len(airfoil_points)
+                i - len(self.current_points)
                 for sw_idx, (sw, start_idx, n_points_web) in enumerate(web_info):
                     if start_idx <= i < start_idx + n_points_web:
                         web_idx = sw_idx
@@ -147,6 +157,15 @@ class AirfoilViz:
                     normal = np.array([0, 0, 1])
                 normals_point.append(normal)
         poly.point_data["Normals"] = np.array(normals_point)
+        return poly
+
+    def to_pyvista(self):
+        """Export to PyVista PolyData (line mesh)."""
+        self.logger.debug("Exporting to PyVista")
+        all_points, web_w, web_info = self._create_pyvista_mesh()
+        poly = self._create_lines_and_cells(all_points, web_info)
+        poly = self._add_point_data(poly, all_points, web_w, web_info)
+        poly = self._add_normals(poly, all_points, web_info)
         self.logger.debug(
             f"PyVista mesh created with {poly.n_points} points and {poly.n_cells} cells"
         )

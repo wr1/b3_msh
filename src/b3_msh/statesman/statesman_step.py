@@ -74,48 +74,48 @@ class B3MshStep(Statesman):
     output_files = ["b3_msh/lm2.vtp"]
     dependent_sections = ["geometry", "airfoils", "structure", "mesh"]
 
-    def _execute(self):
-        self.logger.info("Executing B3MshStep: Processing blade mesh.")
-        # Expand mesh.z from specs to list of floats
+    def _expand_mesh_z(self):
+        """Expand mesh.z from specs to list of floats."""
         mesh_z = []
-        for z_spec in self.config["mesh"]["z"]:
+        for z_spec in self.config['mesh']['z']:
             if z_spec["type"] == "plain":
                 mesh_z.extend(z_spec["values"])
             elif z_spec["type"] == "linspace":
-                mesh_z.extend(
-                    np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"])
-                )
-        self.config["mesh"]["z"] = sorted(list(set(mesh_z)))
+                mesh_z.extend(np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"]))
+        self.config['mesh']['z'] = sorted(list(set(mesh_z)))
 
-        # Validate config
+    def _load_and_validate_config(self):
+        """Load and validate config."""
         config_model = Config(**self.config)
+        return config_model
+
+    def _load_mesh(self, input_path):
+        """Load the pre-processed mesh."""
         logger = get_logger(__name__)
-
-        config_dir = Path(self.config_path).parent
-        workdir = config_dir / config_model.workdir
-        mesh_config = config_model.mesh
-        z_sections = mesh_config.z
-        chordwise_mesh = mesh_config.chordwise
-        webs_config = config_model.structure.webs
-
-        # Load the pre-processed mesh
-        input_path = workdir / "b3_geo" / "lm1_mesh.vtp"
         logger.info(f"Loading pre-processed mesh from {input_path}")
         if not input_path.exists():
             raise FileNotFoundError(
-                f"Input file {input_path} does not exist. Ensure previous steps have run."
+                f"Input file {input_path} does not exist. "
+                "Ensure previous steps have run."
             )
         mesh = pv.read(str(input_path))
+        return mesh
 
+    def _process_sections(self, mesh, z_sections, chordwise_mesh, webs_config):
+        """Process each section."""
+        logger = get_logger(__name__)
         logger.info("Processing sections")
-        # Process each section
         sections = []
         for z in z_sections:
             af = self.process_section_from_mesh(
-                mesh, z, chordwise_mesh.model_dump(), webs_config, logger
+                mesh, z, chordwise_mesh.model_dump(), webs_config
             )
             sections.append(af)
+        return sections
 
+    def _merge_and_save_mesh(self, sections, output_path):
+        """Merge meshes and save."""
+        logger = get_logger(__name__)
         logger.info("Merging meshes into single PolyData")
         # Create meshes
         meshes = [af.to_pyvista() for af in sections]
@@ -133,18 +133,35 @@ class B3MshStep(Statesman):
         # Manually concatenate constant fields if present
         for field in mesh.point_data.keys():
             if rmeshes and field in rmeshes[0].cell_data:
-                merged_values = np.concatenate(
-                    [rmesh.cell_data[field] for rmesh in rmeshes]
-                )
+                merged_values = np.concatenate([rmesh.cell_data[field] for rmesh in rmeshes])
                 merged_mesh.cell_data[field] = merged_values
 
         # Save to VTP
-        output_path = workdir / "b3_msh" / "lm2.vtp"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         logger.info(f"Saving merged mesh to {output_path}")
         merged_mesh.save(str(output_path))
-
         logger.info(f"Saved remeshed blade mesh to {output_path}")
+
+    def _execute(self):
+        """Execute the step."""
+        self.logger.info("Executing B3MshStep: Processing blade mesh.")
+        self._expand_mesh_z()
+        config_model = self._load_and_validate_config()
+        get_logger(__name__)
+
+        config_dir = Path(self.config_path).parent
+        workdir = config_dir / config_model.workdir
+        mesh_config = config_model.mesh
+        z_sections = mesh_config.z
+        chordwise_mesh = mesh_config.chordwise
+        webs_config = config_model.structure.webs
+
+        input_path = workdir / "b3_geo" / "lm1_mesh.vtp"
+        mesh = self._load_mesh(input_path)
+
+        sections = self._process_sections(mesh, z_sections, chordwise_mesh, webs_config)
+        output_path = workdir / "b3_msh" / "lm2.vtp"
+        self._merge_and_save_mesh(sections, output_path)
 
     def process_section_from_mesh(self, mesh, z, chordwise_mesh, webs_config, logger):
         """Process a single section mesh by remeshing with uniform t distribution."""

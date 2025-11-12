@@ -61,18 +61,10 @@ class AirfoilMesh:
         self.logger.debug(f"Panels: {panels}")
         return panels
 
-    def remesh(
-        self,
-        t_distribution=None,
-        total_n_points=None,
-        element_length=None,
-        relative_refinement=None,
-        n_elements_per_panel=None,
-    ):
-        """Remesh the airfoil."""
-        self.logger.debug("Remeshing airfoil")
+    def _determine_remesh_params(self, t_distribution, total_n_points, element_length,
+                                 relative_refinement, n_elements_per_panel):
+        """Determine the t_vals for remeshing based on parameters."""
         if n_elements_per_panel is not None:
-            self.logger.debug("Remeshing with n_elements_per_panel")
             panels = self.get_panels()
             t_vals = []
             for p_idx, (t_start, t_end) in enumerate(panels):
@@ -83,25 +75,9 @@ class AirfoilMesh:
                 t_panel = np.linspace(t_start, t_end, n_elem + 1)
                 t_vals.extend(t_panel)
             t_vals = np.sort(np.unique(t_vals))
-            self.current_t = t_vals
-            self.current_points = self.get_points(t_vals)
-            self.logger.debug(f"Remeshed to {len(t_vals)} points")
-            return
-        elif relative_refinement is None and self.shear_web_refinements:
-            relative_refinement = {}
-            panels = self.get_panels()
-            for sw, factor in self.shear_web_refinements.items():
-                t1, t2 = sw.compute_intersections(self)
-                for p_idx, (ts, te) in enumerate(panels):
-                    if ts <= t1 < te or ts < t2 <= te or (t1 <= ts and te <= t2):
-                        relative_refinement[p_idx] = max(
-                            relative_refinement.get(p_idx, 1.0), factor
-                        )
-        if t_distribution is not None:
-            self.logger.debug("Using provided t_distribution")
+        elif t_distribution is not None:
             t_vals = np.array(t_distribution)
         elif total_n_points is not None:
-            self.logger.debug(f"Remeshing to total {total_n_points} points")
             panels = self.get_panels()
             total_segments = total_n_points - 1
             t_vals = []
@@ -113,13 +89,11 @@ class AirfoilMesh:
                 t_vals.extend(t_panel)
             t_vals = np.array(t_vals)
         elif element_length is not None:
-            self.logger.debug(f"Remeshing with element length {element_length}")
             # Approximate based on arc length
             total_length = self._arc_length(0, 1)
             n = int(total_length / element_length)
             t_vals = np.linspace(0, 1, n)
         elif relative_refinement is not None:
-            self.logger.debug("Remeshing with relative refinement")
             # Refine relative to current
             panels = self.get_panels()
             t_vals = []
@@ -130,9 +104,23 @@ class AirfoilMesh:
                 t_vals.extend(t_panel)
             t_vals = np.array(t_vals)
         else:
-            self.logger.debug("Using default t_distribution")
             t_vals = self.current_t  # Default
+        return t_vals
 
+    def remesh(
+        self,
+        t_distribution=None,
+        total_n_points=None,
+        element_length=None,
+        relative_refinement=None,
+        n_elements_per_panel=None,
+    ):
+        """Remesh the airfoil."""
+        self.logger.debug("Remeshing airfoil")
+        t_vals = self._determine_remesh_params(
+            t_distribution, total_n_points, element_length,
+            relative_refinement, n_elements_per_panel
+        )
         # Ensure hard points are included
         all_t = np.sort(np.unique(np.concatenate([t_vals, self.hard_points])))
         self.current_t = all_t

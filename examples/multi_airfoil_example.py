@@ -84,7 +84,8 @@ for i, af in enumerate(processed_airfoils):
 # Save all to a single VTM file
 multi_block.save("airfoils_30_sections.vtm")
 logger.info(
-    "Saved 30 interpolated airfoils with shared shear web processed in parallel to airfoils_30_sections.vtm"
+    "Saved 30 interpolated airfoils with shared shear web "
+    "processed in parallel to airfoils_30_sections.vtm"
 )
 
 logger.info("30 interpolated airfoils with shared shear web processed in parallel.")

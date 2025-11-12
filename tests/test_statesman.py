@@ -8,7 +8,7 @@ def test_b3msh_step_attributes():
     assert B3MshStep.workdir_key == "workdir"
     assert len(B3MshStep.input_files) == 1
     assert B3MshStep.input_files[0].name == "b3_geo/lm1_mesh.vtp"
-    assert B3MshStep.input_files[0].non_empty
+    assert B3MshStep.input_files[0].non_empty == True
     assert B3MshStep.output_files == ["b3_msh/lm2.vtp"]
     assert set(B3MshStep.dependent_sections) == {
         "geometry",
@@ -65,7 +65,7 @@ def test_b3msh_step_execute():
         "b3_msh.statesman.statesman_step.pv.read", return_value=mock_mesh
     ) as mock_read, patch(
         "b3_msh.statesman.statesman_step.pv.MultiBlock"
-    ) as mock_multiblock, patch("b3_msh.statesman.statesman_step.os.makedirs"), patch(
+    ) as mock_multiblock, patch(
         "pathlib.Path.exists", return_value=True
     ), patch(
         "b3_msh.statesman.statesman_step.pv.merge", return_value=mock_mesh
