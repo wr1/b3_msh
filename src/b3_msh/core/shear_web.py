@@ -24,7 +24,7 @@ class ShearWeb:
         elif self.definition["type"] == "line":
             result = self._intersect_line(airfoil)
         elif self.definition["type"] == "trailing_edge":
-            result = 0.0, 1.0
+            result = 1.0, 0.0
         else:
             self.logger.error(f"Unsupported shear web type: {self.definition['type']}")
             raise ValueError("Unsupported shear web type")

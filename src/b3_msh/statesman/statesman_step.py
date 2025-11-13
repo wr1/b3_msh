@@ -91,8 +91,7 @@ class B3MshStep(Statesman):
 
     def _load_mesh(self, input_path):
         """Load the pre-processed mesh."""
-        logger = get_logger(__name__)
-        logger.info(f"Loading pre-processed mesh from {input_path}")
+        self.logger.info(f"Loading pre-processed mesh from {input_path}")
         if not input_path.exists():
             raise FileNotFoundError(
                 f"Input file {input_path} does not exist. "
@@ -103,20 +102,18 @@ class B3MshStep(Statesman):
 
     def _process_sections(self, mesh, z_sections, chordwise_mesh, webs_config):
         """Process each section."""
-        logger = get_logger(__name__)
-        logger.info("Processing sections")
+        self.logger.info("Processing sections")
         sections = []
         for z in z_sections:
             af = self.process_section_from_mesh(
-                mesh, z, chordwise_mesh.model_dump(), webs_config, logger
+                mesh, z, chordwise_mesh.model_dump(), webs_config, self.logger
             )
             sections.append(af)
         return sections
 
     def _merge_and_save_mesh(self, sections, output_path):
         """Merge meshes and save."""
-        logger = get_logger(__name__)
-        logger.info("Merging meshes into single PolyData")
+        self.logger.info("Merging meshes into single PolyData")
         # Create meshes
         meshes = [af.to_pyvista() for af in sections]
         rmeshes = []
@@ -149,16 +146,15 @@ class B3MshStep(Statesman):
 
         # Save to VTP
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Saving merged mesh to {output_path}")
+        self.logger.info(f"Saving merged mesh to {output_path}")
         poly.save(str(output_path))
-        logger.info(f"Saved remeshed blade mesh to {output_path}")
+        self.logger.info(f"Saved remeshed blade mesh to {output_path}")
 
     def _execute(self):
         """Execute the step."""
         self.logger.info("Executing B3MshStep: Processing blade mesh.")
         self._expand_mesh_z()
         config_model = self._load_and_validate_config()
-        get_logger(__name__)
 
         config_dir = Path(self.config_path).parent
         workdir = config_dir / config_model.workdir
