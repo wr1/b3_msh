@@ -108,7 +108,7 @@ class B3MshStep(Statesman):
         sections = []
         for z in z_sections:
             af = self.process_section_from_mesh(
-                mesh, z, chordwise_mesh.model_dump(), webs_config
+                mesh, z, chordwise_mesh.model_dump(), webs_config, logger
             )
             sections.append(af)
         return sections
@@ -128,18 +128,29 @@ class B3MshStep(Statesman):
             for key in ["Normals", "z"]:
                 if key in mesh.cell_data:
                     del mesh.cell_data[key]
-        # Merge into single PolyData
+        # Merge into single UnstructuredGrid
         merged_mesh = pv.merge(rmeshes)
         # Manually concatenate constant fields if present
         for field in mesh.point_data.keys():
             if rmeshes and field in rmeshes[0].cell_data:
-                merged_values = np.concatenate([rmesh.cell_data[field] for rmesh in rmeshes])
+                merged_values = np.concatenate(
+                    [rmesh.cell_data[field] for rmesh in rmeshes]
+                )
                 merged_mesh.cell_data[field] = merged_values
+
+        # Convert to PolyData for VTP
+        poly = pv.PolyData()
+        poly.points = merged_mesh.points
+        poly.lines = merged_mesh.lines
+        for key, value in merged_mesh.cell_data.items():
+            poly.cell_data[key] = value
+        for key, value in merged_mesh.point_data.items():
+            poly.point_data[key] = value
 
         # Save to VTP
         output_path.parent.mkdir(parents=True, exist_ok=True)
         logger.info(f"Saving merged mesh to {output_path}")
-        merged_mesh.save(str(output_path))
+        poly.save(str(output_path))
         logger.info(f"Saved remeshed blade mesh to {output_path}")
 
     def _execute(self):
@@ -177,9 +188,7 @@ class B3MshStep(Statesman):
         points_2d = sorted_points[:, :2]  # Take x,y
 
         # Create Airfoil from points
-        af = Airfoil(
-            points_2d, is_normalized=False, position=(0, 0, z)
-        )  # Position at z
+        af = Airfoil(points_2d, is_normalized=False, position=(0, 0, z))  # Position at z
 
         # Add constant fields from input mesh
         af.constant_fields = {}

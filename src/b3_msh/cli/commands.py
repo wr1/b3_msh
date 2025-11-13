@@ -1,5 +1,3 @@
-"""CLI command implementations."""
-
 import logging
 import numpy as np
 import os
@@ -133,10 +131,19 @@ def blade(config: str, output_format: str = "vtp", verbose: bool = False):
                 )
                 merged_mesh.cell_data[field] = merged_values
 
+        # Convert to PolyData for VTP
+        poly = pv.PolyData()
+        poly.points = merged_mesh.points
+        poly.lines = merged_mesh.lines
+        for key, value in merged_mesh.cell_data.items():
+            poly.cell_data[key] = value
+        for key, value in merged_mesh.point_data.items():
+            poly.point_data[key] = value
+
         # Save to VTP
         output_path = os.path.join(workdir, "b3_msh", "lm2.vtp")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         logger.info(f"Saving merged mesh to {output_path}")
-        merged_mesh.save(output_path)
+        poly.save(output_path)
 
     logger.info(f"Saved remeshed blade mesh to {output_path}")
