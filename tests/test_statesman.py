@@ -55,6 +55,7 @@ def test_b3msh_step_execute():
     )
     mock_mesh.point_data = {"t": np.array([0, 0.5, 1, 0, 0.5, 1])}
     mock_mesh.cell_data = {}
+    mock_mesh.lines = np.array([], dtype=int)
     mock_mesh.point_data_to_cell_data = Mock(return_value=mock_mesh)
     mock_mesh.save = Mock()
     mock_af = Mock()
@@ -69,7 +70,9 @@ def test_b3msh_step_execute():
         "pathlib.Path.exists", return_value=True
     ), patch(
         "b3_msh.statesman.statesman_step.pv.merge", return_value=mock_mesh
-    ) as mock_merge:
+    ) as mock_merge, patch(
+        "b3_msh.statesman.statesman_step.pv.PolyData.save", Mock()
+    ) as mock_poly_save:
         mock_mb_instance = Mock()
         mock_multiblock.return_value = mock_mb_instance
         # Call _execute
@@ -78,5 +81,5 @@ def test_b3msh_step_execute():
         mock_read.assert_called_once()
         # Check that merge was called
         mock_merge.assert_called_once()
-        # Check that save was called
-        mock_mesh.save.assert_called_once()
+        # Check that poly save was called
+        mock_poly_save.assert_called_once()
