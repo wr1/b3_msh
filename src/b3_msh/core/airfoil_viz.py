@@ -1,4 +1,5 @@
-"""Visualization functionality for Airfoil, including plotting and PyVista export."""
+"""Visualization functionality for Airfoil,
+including plotting and PyVista export."""
 
 import numpy as np
 import pyvista as pv
@@ -7,7 +8,8 @@ from ..utils.logger import get_logger
 
 
 class AirfoilViz:
-    """Visualization functionality for Airfoil, including plotting and PyVista export."""
+    """Visualization functionality for Airfoil,
+    including plotting and PyVista export."""
 
     def __init__(self):
         self.logger = get_logger(self.__class__.__name__)
@@ -80,7 +82,7 @@ class AirfoilViz:
     def _add_point_data(self, poly, all_points, web_w, web_info):
         """Add point data to the mesh."""
         # Add constant fields to cell_data
-        if hasattr(self, 'constant_fields'):
+        if hasattr(self, "constant_fields"):
             for field, value in self.constant_fields.items():
                 poly.cell_data[field] = np.full(poly.n_cells, value)
         # Compute cumulative arc lengths
@@ -102,7 +104,10 @@ class AirfoilViz:
             )
         # Add t values
         poly.point_data["t"] = np.concatenate(
-            [self.current_t, np.full(len(all_points) - len(self.current_points), np.nan)]
+            [
+                self.current_t,
+                np.full(len(all_points) - len(self.current_points), np.nan),
+            ]
         )
         # Add w values for webs
         poly.point_data["w"] = np.concatenate(

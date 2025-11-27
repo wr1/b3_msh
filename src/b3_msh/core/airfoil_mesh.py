@@ -1,11 +1,13 @@
-"""Meshing functionality for Airfoil, including hard points, panels, and remeshing."""
+"""Meshing functionality for Airfoil, including
+hard points, panels, and remeshing."""
 
 import numpy as np
 from ..utils.logger import get_logger
 
 
 class AirfoilMesh:
-    """Meshing functionality for Airfoil, including hard points, panels, and remeshing."""
+    """Meshing functionality for Airfoil, including
+    hard points, panels, and remeshing."""
 
     def __init__(self):
         self.logger = get_logger(self.__class__.__name__)
@@ -61,8 +63,14 @@ class AirfoilMesh:
         self.logger.debug(f"Panels: {panels}")
         return panels
 
-    def _determine_remesh_params(self, t_distribution, total_n_points, element_length,
-                                 relative_refinement, n_elements_per_panel):
+    def _determine_remesh_params(
+        self,
+        t_distribution,
+        total_n_points,
+        element_length,
+        relative_refinement,
+        n_elements_per_panel,
+    ):
         """Determine the t_vals for remeshing based on parameters."""
         if n_elements_per_panel is not None:
             panels = self.get_panels()
@@ -118,8 +126,11 @@ class AirfoilMesh:
         """Remesh the airfoil."""
         self.logger.debug("Remeshing airfoil")
         t_vals = self._determine_remesh_params(
-            t_distribution, total_n_points, element_length,
-            relative_refinement, n_elements_per_panel
+            t_distribution,
+            total_n_points,
+            element_length,
+            relative_refinement,
+            n_elements_per_panel,
         )
         # Ensure hard points are included
         all_t = np.sort(np.unique(np.concatenate([t_vals, self.hard_points])))

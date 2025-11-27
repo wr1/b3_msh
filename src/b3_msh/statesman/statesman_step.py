@@ -2,7 +2,6 @@ import numpy as np
 from pathlib import Path
 from statesman import Statesman
 from statesman.core.base import ManagedFile
-from ..utils.logger import get_logger
 from ..core.airfoil import Airfoil
 from ..core.shear_web import ShearWeb
 import pyvista as pv
@@ -77,12 +76,14 @@ class B3MshStep(Statesman):
     def _expand_mesh_z(self):
         """Expand mesh.z from specs to list of floats."""
         mesh_z = []
-        for z_spec in self.config['mesh']['z']:
+        for z_spec in self.config["mesh"]["z"]:
             if z_spec["type"] == "plain":
                 mesh_z.extend(z_spec["values"])
             elif z_spec["type"] == "linspace":
-                mesh_z.extend(np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"]))
-        self.config['mesh']['z'] = sorted(list(set(mesh_z)))
+                mesh_z.extend(
+                    np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"])
+                )
+        self.config["mesh"]["z"] = sorted(list(set(mesh_z)))
 
     def _load_and_validate_config(self):
         """Load and validate config."""
@@ -184,7 +185,9 @@ class B3MshStep(Statesman):
         points_2d = sorted_points[:, :2]  # Take x,y
 
         # Create Airfoil from points
-        af = Airfoil(points_2d, is_normalized=False, position=(0, 0, z))  # Position at z
+        af = Airfoil(
+            points_2d, is_normalized=False, position=(0, 0, z)
+        )  # Position at z
 
         # Add constant fields from input mesh
         af.constant_fields = {}
