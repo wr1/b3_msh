@@ -3,33 +3,68 @@ import numpy as np
 import os
 import yaml
 import pyvista as pv
+from ..core.airfoil import Airfoil
 from ..utils.logger import get_logger
 from ..core.blade_processing import process_section_from_mesh
 
 
-def _load_config_and_mesh(config_path):
-    """Load config and mesh."""
+def plot(
+    file: str,
+    chord: float = 1.0,
+    px=0,
+    py=0,
+    pz=0,
+    rotation: float = 0,
+    verbose: bool = False,
+):
+    """Plot an airfoil from file."""
+    logger = get_logger("CLI")
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+        logger.info("Verbose logging enabled")
+    else:
+        logger.setLevel(logging.WARNING)
+    logger.info(f"Plotting airfoil from {file}")
+    af = Airfoil.from_xfoil(
+        file,
+        chord=chord,
+        position=(px, py, pz),
+        rotation=rotation,
+    )
+    af.plot()
+    logger.debug("Plot command completed")
+
+
+def remesh(
+    file: str,
+    output: str,
+    n_points: int = 100,
+    verbose: bool = False,
+):
+    """Remesh an airfoil and save."""
+    logger = get_logger("CLI")
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+        logger.info("Verbose logging enabled")
+    else:
+        logger.setLevel(logging.WARNING)
+    logger.info(f"Remeshing airfoil from {file}")
+    af = Airfoil.from_xfoil(file)
+    af.remesh(n_points=n_points)
+    np.savetxt(output, af.current_points[:, :2], header="x y", comments="")
+    logger.info(f"Remeshed points saved to {output}")
+    logger.debug("Remesh command completed")
+
+
+def _load_config(config_path):
+    """Load YAML config."""
     with open(config_path, "r") as f:
-        config_data = yaml.safe_load(f)
-    config_dir = os.path.dirname(os.path.abspath(config_path))
-    workdir = os.path.join(config_dir, config_data["workdir"])
-    mesh_config = config_data["mesh"]
-    chordwise_mesh = mesh_config["chordwise"]
-    webs_config = config_data["structure"]["webs"]
-    input_path = os.path.join(workdir, "b3_geo", "lm1_mesh.vtp")
-    mesh = pv.read(input_path)
-    return mesh, chordwise_mesh, webs_config
+        return yaml.safe_load(f)
 
 
-def _get_z_sections(mesh):
-    """Get unique z sections from mesh."""
-    z_sections = np.unique(mesh.points[:, 2])
-    z_sections = np.sort(z_sections)
-    return z_sections
-
-
-def _process_sections(mesh, z_sections, chordwise_mesh, webs_config, logger):
-    """Process each section."""
+def _process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config):
+    """Process sections from mesh."""
+    logger.info("Processing sections")
     sections = []
     for z in z_sections:
         af = process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
@@ -37,17 +72,21 @@ def _process_sections(mesh, z_sections, chordwise_mesh, webs_config, logger):
     return sections
 
 
-def _save_as_vtm(sections, output_path):
-    """Save as MultiBlock VTM."""
+def _save_as_vtm(logger, sections, output_path):
+    """Save as VTM."""
+    logger.info("Creating new MultiBlock mesh")
     new_multi_block = pv.MultiBlock()
     for i, af in enumerate(sections):
         mesh_out = af.to_pyvista()
         new_multi_block.append(mesh_out, f"Section_{i}")
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    logger.info(f"Saving mesh to {output_path}")
     new_multi_block.save(output_path)
 
 
-def _save_as_vtp(sections, output_path):
-    """Save as merged PolyData VTP."""
+def _save_as_vtp(logger, sections, output_path):
+    """Save as VTP."""
+    logger.info("Merging meshes into single PolyData")
     meshes = [af.to_pyvista() for af in sections]
     rmeshes = []
     for mesh in meshes:
@@ -71,6 +110,8 @@ def _save_as_vtp(sections, output_path):
         poly.cell_data[key] = value
     for key, value in merged_mesh.point_data.items():
         poly.point_data[key] = value
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    logger.info(f"Saving merged mesh to {output_path}")
     poly.save(output_path)
 
 
@@ -84,19 +125,30 @@ def blade(config: str, output_format: str = "vtp", verbose: bool = False):
         logger.setLevel(logging.INFO)
     logger.info(f"Processing blade from {config}")
 
-    mesh, chordwise_mesh, webs_config = _load_config_and_mesh(config)
-    z_sections = _get_z_sections(mesh)
-    logger.info(f"Found {len(z_sections)} z sections")
-
-    sections = _process_sections(mesh, z_sections, chordwise_mesh, webs_config, logger)
-
+    config_data = _load_config(config)
     config_dir = os.path.dirname(os.path.abspath(config))
     workdir = os.path.join(config_dir, config_data["workdir"])
+    mesh_config = config_data["mesh"]
+    chordwise_mesh = mesh_config["chordwise"]
+    webs_config = config_data["structure"]["webs"]
+
+    input_path = os.path.join(workdir, "b3_geo", "lm1_mesh.vtp")
+    logger.info(f"Loading pre-processed mesh from {input_path}")
+    mesh = pv.read(input_path)
+
+    z_sections = np.unique(mesh.points[:, 2])
+    z_sections = np.sort(z_sections)
+    logger.info(
+        f"Found {len(z_sections)} z sections: {np.round(z_sections, 2).tolist()}"
+    )
+
+    sections = _process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config)
+
     if output_format == "vtm":
         output_path = os.path.join(workdir, "b3_msh", "lm2.vtm")
-        _save_as_vtm(sections, output_path)
+        _save_as_vtm(logger, sections, output_path)
     else:
         output_path = os.path.join(workdir, "b3_msh", "lm2.vtp")
-        _save_as_vtp(sections, output_path)
+        _save_as_vtp(logger, sections, output_path)
 
     logger.info(f"Saved remeshed blade mesh to {output_path}")
