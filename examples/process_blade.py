@@ -17,11 +17,8 @@ def main():
     logger = get_logger(__name__)
     logger.info("Starting blade remeshing")
 
-    config_path = "config/data/blade_test.yml"
-    logger.info(f"Loading config from {config_path}")
+    config_path = "examples/blade_test.yml"
     config = load_yaml_config(config_path)
-
-    print(config_path)
 
     workdir = config["workdir"]
     mesh_config = config["mesh"]
