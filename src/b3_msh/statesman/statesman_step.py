@@ -11,8 +11,6 @@ from typing import List, Dict, Any
 
 class Planform(BaseModel):
     npchord: int
-    npspan: int
-    pre_rotation: float
     dx: List[List[float]]
     dy: List[List[float]]
     z: List[List[float]]

@@ -7,10 +7,9 @@ from .shear_web import ShearWeb
 
 def process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger):
     """Process a single section mesh by remeshing with uniform t distribution."""
-    logger.debug(f"Processing section at z={z}")
-
     # Extract points at this z
     mask = np.isclose(mesh.points[:, 2], z)
+
     section_points = mesh.points[mask]
     # Sort by associated t pointdata
     t_values = mesh.point_data["t"][mask]

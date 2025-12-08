@@ -17,11 +17,8 @@ def main():
     logger = get_logger(__name__)
     logger.info("Starting blade remeshing")
 
-    config_path = "config/data/blade_test.yml"
-    logger.info(f"Loading config from {config_path}")
+    config_path = "examples/blade_test.yml"
     config = load_yaml_config(config_path)
-
-    print(config_path)
 
     workdir = config["workdir"]
     mesh_config = config["mesh"]
@@ -42,11 +39,12 @@ def main():
     input_path = os.path.join("examples", workdir, "b3_geo", "lm1_mesh.vtp")
     logger.info(f"Loading pre-processed mesh from {input_path}")
     mesh = pv.read(input_path)
-
+    logger.info("Loaded mesh successfully")
     logger.info("Processing sections")
     # Process each section
     sections = []
     for z in z_values:
+        logger.info(f"Processing section at z={z}")
         af = process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
         sections.append(af)
 

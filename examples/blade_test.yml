@@ -1,0 +1,164 @@
+workdir: temp_blade
+
+geometry:
+  planform:
+    npchord: 200
+    # offset in prebend direction, negative is upwind
+    dx: [[0.0, 0.0], [0.2, 0.0], [0.4, 0.0], [1.0, -5.0]]
+    # offset in chord direction
+    dy: [[0.0, 0.0], [0.01, 0], [0.3, 0.586], [0.43, 0.529],
+      [0.56, 0.498], [0.69, 0.4355],
+      [0.82, 0.329], [0.95, 0.33]]
+    z: [[0, 3], [1, 126]]
+    chord: [[0.0, 5], [0.03, 5.06], [0.2, 6.5], [0.4, 4.4], [0.6, 2.8], [0.75, 2.0], [
+        0.94, 1.4], [0.985, 0.8], [1, 0.1]]
+    thickness: [[0.0, 1.0], [0.05, 0.97], [0.2, 0.53], [0.31, 0.39], [1.0, 0.17]]
+    twist: [[0.0, 10], [0.2, 2], [0.4, 1], [0.6, 0], [0.8, -0.5], [0.9, -1], [1.0, 0]]
+
+
+airfoils: 
+  - path: airfoils/DU93-W-210_smoothed_dero_0.210.dat
+    name: DU93-W-210
+    thickness: 0.21
+  - path: airfoils/du_91_w2_250_smoothed_dero_0.250.dat
+    name: DU91-W-250
+    thickness: 0.25
+  - path: airfoils/circ_m32.dat
+    name: Circ M32
+    thickness: 1.0
+  - path: airfoils/naca633418_te.dat
+    name: NACA 633418 TE
+    thickness: 0.179928
+  - path: airfoils/naca0017.dat
+    name: NACA 0017
+    thickness: 0.17
+
+bem:
+  rated_power: 10000000
+  polars:
+    - key: 1.0
+      name: Cylinder
+      file: polars/Cylinder1.dat
+    - key: 0.21
+      name: DU21
+      file: polars/DU21_A17.dat
+    - key: 0.25
+      name: DU25
+      file: polars/DU25_A17.dat
+    - key: 0.30
+      name: DU30
+      file: polars/DU30_A17.dat
+    - key: 0.35
+      name: DU35
+      file: polars/DU35_A17.dat
+    - key: 0.40
+      name: DU40
+      file: polars/DU40_A17.dat
+    - key: 0.17
+      name: NACA64
+      file: polars/NACA64_A17.dat
+  B: 3
+  rho: 1.225
+  mu: 0.0000181
+  precone: 0
+  tilt: 0
+  yaw: 0
+  shearExp: 0.2
+  hubHt: 90
+  max_tipspeed: 95
+  uinf: [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26]
+
+
+structure:
+  webs:
+    - name: web0
+      type: plane
+      origin: [0, 0, 0]
+      orientation: [0.02, 1, 0]
+      z_range: [1,100]
+      element_size: 0.10
+      mesh: false
+    - name: web1
+      type: plane
+      origin: [0, 0.2, 0]
+      orientation: [0.02, 1, 0]
+      z_range: [1, 110]
+      element_size: 0.10
+      mesh: true
+    - name: web2
+      type: plane
+      origin: [0, -0.2, 0]
+      orientation: [0.02, 1, 0]
+      z_range: [1, 100]
+      element_size: 0.10
+      mesh: true
+
+mesh:
+  z: 
+    - type: "plain"
+      values: [4,20.25,50,80]
+    - type: "linspace"
+      values: [3,100]
+      num: 50
+      
+  chordwise:
+    default:
+      # number of elements per panel where panel between 2 hard points, hard points being the start or end of the airfoil line, or a web intersection
+      n_elem: 40  
+      element_size: 0.10
+    panels:
+      - id: 0
+        element_size: 0.05
+      - id: 1
+        element_size: 0.10
+
+matdb:
+  carbon:
+    id: 1
+  glass:
+    id: 2
+  foam:
+    id: 3
+
+laminates:
+  datums:
+    thickness_taper:
+      base: z
+      values: [[5,0],[30,0.008], [100,0.008], [101,0.0]]
+      # [[-101, 0.0], [-100, 0.008], [-30, 0.008],[-8,0.0]]
+    glass_taper:
+      base: z
+      values: [[0, 0.1],[3,0.02], [20,0.008], [200,0.004]]
+      # [[-200, 0.004], [-20, 0.008], [-3, 0.02],[0,0.1]]
+
+  plies:
+    - mat: glass
+      angle: 0
+      thickness: glass_taper * 0.6
+      parent: plate
+      conditions: []
+      key: 99
+    - mat: carbon
+      angle: 0
+      thickness: thickness_taper
+      parent: plate
+      conditions:
+      - field: z
+        operator: in_range
+        operand: [-1e3, 1e3]
+      - field: abs_dist_web1_hp0
+        operator: in_range
+        operand: [0, 0.4]
+      - field: panel_id
+        operator: in_range
+        operand: [1,12]
+      key: 100
+    - mat: glass
+      angle: 0
+      thickness: glass_taper
+      parent: plate
+      conditions: []
+      key: 102
+
+
+ 
