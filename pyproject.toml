@@ -21,9 +21,6 @@ dependencies = [
     "statesman @ git+https://github.com/wr1/statesman.git",
     "pyyaml",
     "rich",
-    "mkdocs",
-    "mkdocs-material",
-    "mkdocstrings[python]",
 ]
 
 [project.scripts]
