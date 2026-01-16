@@ -7,7 +7,9 @@ import os
 # Run the blade command with the config
 config_path = "examples/blade_test.yml"
 if not os.path.exists(config_path):
-    print(f"Config file {config_path} not found. Please ensure airfoil files are present.")
+    print(
+        f"Config file {config_path} not found. Please ensure airfoil files are present."
+    )
     sys.exit(1)
 
 # Note: This assumes the input mesh exists; in practice, generate or provide lm1_mesh.vtp

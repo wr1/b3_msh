@@ -150,7 +150,7 @@ class B3MshStep(Statesman):
                 if z_range[0] <= z <= z_range[1]:
                     sw_def = {
                         "type": web.type,
-                        "origin": [web.origin[0], web.origin[1], z],
+                        "origin": web.origin,  # Use full 3D origin from YAML
                         "normal": web.orientation,
                         "name": web.name,
                     }
