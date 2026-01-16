@@ -39,7 +39,7 @@ def process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger):
             if z_range[0] <= z <= z_range[1]:
                 sw_def = {
                     "type": web["type"],
-                    "origin": [web["origin"][0], web["origin"][1], z],
+                    "origin": [web["origin"][0], web["origin"][1], web["origin"][2]],
                     "normal": web["orientation"],
                     "name": web["name"],
                 }
