@@ -88,10 +88,12 @@ structure:
     - name: web2
       type: plane
       origin: [0, -0.2, 0]
-      orientation: [0.02, 1, 0]
+      orientation: [0.02, 1, 0.001]
       z_range: [1, 100]
       element_size: 0.10
       mesh: true
+
+
 
 mesh:
   z: 
@@ -115,16 +117,35 @@ mesh:
 matdb:
   carbon:
     id: 1
+    type: orthotropic
+    E1: 100000000000.0
+    E2: 10000000000.0
+    E3: 10000000000.0
+    G12: 5000000000.0
+    G13: 5000000000.0
+    G23: 5000000000.0
+    nu12: 0.3
+    nu13: 0.3
+    nu23: 0.3
+    rho: 1600.0
   glass:
     id: 2
+    type: isotropic
+    E: 50000000000.0
+    nu: 0.3
+    rho: 2000.0
   foam:
     id: 3
+    type: isotropic
+    E: 100000000.0
+    nu: 0.4
+    rho: 100.0
 
 laminates:
   datums:
     thickness_taper:
       base: z
-      values: [[5,0],[30,0.008], [100,0.008], [101,0.0]]
+      values: [[5,0],[30,0.008], [100,0.008], [141,0.008]]
       # [[-101, 0.0], [-100, 0.008], [-30, 0.008],[-8,0.0]]
     glass_taper:
       base: z
@@ -159,6 +180,3 @@ laminates:
       parent: plate
       conditions: []
       key: 102
-
-
- 
