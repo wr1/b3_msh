@@ -5,7 +5,7 @@ import yaml
 import pyvista as pv
 from ..core.airfoil import Airfoil
 from ..utils.logger import get_logger
-from ..core.blade_processing import process_section_from_mesh
+from ..core.mesh_step import B3MshStep
 
 
 def plot(
@@ -67,7 +67,9 @@ def _process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config):
     logger.info("Processing sections")
     sections = []
     for z in z_sections:
-        af = process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
+        af = B3MshStep.process_section_from_mesh(
+            mesh, z, chordwise_mesh, webs_config, logger
+        )
         sections.append(af)
     return sections
 

@@ -5,10 +5,11 @@ import pytest
 
 # List of example scripts to test
 examples = [
+    "examples/process_blade.py",
     "examples/example_usage.py",
     "examples/multi_airfoil_example.py",
     "examples/explicit_n_elements_example.py",
-    "examples/process_blade.py",
+    "examples/run_blade_with_ribbon.py",
 ]
 
 

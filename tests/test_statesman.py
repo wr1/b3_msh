@@ -1,6 +1,6 @@
 import numpy as np
 from unittest.mock import Mock, patch
-from b3_msh.statesman.statesman_step import B3MshStep
+from b3_msh.core.mesh_step import B3MshStep
 
 
 def test_b3msh_step_attributes():
@@ -63,13 +63,13 @@ def test_b3msh_step_execute():
     step.process_section_from_mesh = Mock(return_value=mock_af)
     # Mock pv.read
     with patch(
-        "b3_msh.statesman.statesman_step.pv.read", return_value=mock_mesh
+        "b3_msh.core.mesh_step.pv.read", return_value=mock_mesh
     ) as mock_read, patch(
-        "b3_msh.statesman.statesman_step.pv.MultiBlock"
+        "b3_msh.core.mesh_step.pv.MultiBlock"
     ) as mock_multiblock, patch("pathlib.Path.exists", return_value=True), patch(
-        "b3_msh.statesman.statesman_step.pv.merge", return_value=mock_mesh
+        "b3_msh.core.mesh_step.pv.merge", return_value=mock_mesh
     ) as mock_merge, patch(
-        "b3_msh.statesman.statesman_step.pv.PolyData.save", Mock()
+        "b3_msh.core.mesh_step.pv.PolyData.save", Mock()
     ) as mock_poly_save:
         mock_mb_instance = Mock()
         mock_multiblock.return_value = mock_mb_instance

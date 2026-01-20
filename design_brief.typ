@@ -34,15 +34,26 @@ internally this is interpolated using a spline, which has parametric coordinate 
 - a panel is a section between two hard points, with no shear webs there is only panel 0 
 - if you add a shear web with hard points t=0.3 and t=0.7, then you have three panels, panel 0 from t=0 to 0.3, panel 1 from t=0.3 to 0.7, and panel 2 from t=0.7 to 1
 
-== shear webs
+== shear webs 
+=== 2D
 - shear webs can be defined as 
     - plane (origin (x,y,z) and normal (nx,ny,nz)), intersection with airfoil gives two hard points
     - a line in 2D (intersection between airfoil and line gives two hard points)
-    - relative chord position [dont implement yet]
-    - absolute chord position [dont implement yet]
 
 - shearwebs can have names, and the coordinates related to the shear web interactions then have those names, say a web is named web0, then there are abs and relative distance from web0 hard point 0 and hard point 1  along airfoil as float arrays added to the output mesh
 - if hard points don't have explicit names they inherit from the shear web, default names for shear webs are web{nr} where nr is the shear web id after order of creation
+
+=== 3D 
+Shear webs in 2d can be defined in 3D 
+- The shear web can be a 3D plane (same as 2D plane), by adding a non-0 nz, the web location in 2d changes as it runs down the blade, this is intended and allows angling of webs 
+- New definition, class *ribbon*, the ribbon web is defined as a variable offset in the normal direction from an existing web, so it has a *reference web*, and a series of key points [[z,offset]...] defining the offset of the ribbon web from the reference web for z locations, the offset can be interpolated for intermediate sections using pchip or interp
+
+
+
+
+
+
+
 
 = tech 
 - scipy pchip for spline interpolation
