@@ -1,7 +1,5 @@
-"""Pydantic models for mesh configuration and data structures."""
-
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 
 class Planform(BaseModel):
@@ -27,11 +25,13 @@ class AirfoilItem(BaseModel):
 class Web(BaseModel):
     name: str
     type: str
-    origin: List[float]
-    orientation: List[float]
-    z_range: List[float]
-    element_size: float
+    origin: Optional[List[float]] = None
+    orientation: Optional[List[float]] = None
+    z_range: Optional[List[float]] = None
+    element_size: Optional[float] = None
     mesh: bool
+    reference_web: Optional[str] = None
+    offsets: Optional[List[List[float]]] = None
 
 
 class Structure(BaseModel):

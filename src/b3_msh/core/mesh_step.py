@@ -1,5 +1,3 @@
-"""Statesman step for running b3_msh blade processing."""
-
 import numpy as np
 from pathlib import Path
 from statesman import Statesman
@@ -8,6 +6,7 @@ from .airfoil import Airfoil
 from .shear_web import ShearWeb
 from .mesh_model import Config
 import pyvista as pv
+from scipy.interpolate import PchipInterpolator
 
 
 class B3MshStep(Statesman):
@@ -52,9 +51,10 @@ class B3MshStep(Statesman):
         """Process each section."""
         self.logger.info("Processing sections")
         sections = []
+        webs_config_dict = [web.model_dump() for web in webs_config]
         for z in z_sections:
             af = self.process_section_from_mesh(
-                mesh, z, chordwise_mesh.model_dump(), webs_config, self.logger
+                mesh, z, chordwise_mesh.model_dump(), webs_config_dict, self.logger
             )
             sections.append(af)
         return sections
@@ -98,6 +98,83 @@ class B3MshStep(Statesman):
         poly.save(str(output_path))
         self.logger.info(f"Saved remeshed blade mesh to {output_path}")
 
+    @staticmethod
+    def process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger):
+        """Process a single section mesh by remeshing with uniform t distribution."""
+        # Extract points at this z
+        mask = np.isclose(mesh.points[:, 2], z)
+
+        section_points = mesh.points[mask]
+        # Sort by associated t pointdata
+        t_values = mesh.point_data["t"][mask]
+        sorted_indices = np.argsort(t_values)
+        sorted_points = section_points[sorted_indices]
+        points_2d = sorted_points[:, :2]  # Take x,y
+
+        # Get rel_span from mesh
+        rel_span_values = mesh.point_data["rel_span"][mask]
+        rel_span = rel_span_values[0]  # All points at same z have same rel_span
+
+        # Create Airfoil from points
+        af = Airfoil(points_2d, is_normalized=False, position=(0, 0, z))  # Position at z
+        af.rel_span = rel_span
+
+        # Add constant fields from input mesh
+        af.constant_fields = {}
+        for field in mesh.point_data.keys():
+            values = mesh.point_data[field][mask]
+            if np.allclose(values, values[0]):
+                af.constant_fields[field] = values[0]
+
+        # Add shear webs if applicable
+        for web in webs_config:
+            if web["mesh"]:
+                z_range = web["z_range"]
+                if z_range[0] <= z <= z_range[1]:
+                    if web["type"] == "ribbon":
+                        # Handle ribbon web
+                        ref_web_name = web["reference_web"]
+                        ref_web = next(w for w in webs_config if w["name"] == ref_web_name)
+                        z_vals = [p[0] for p in web["offsets"]]
+                        offset_vals = [p[1] for p in web["offsets"]]
+                        offset_interp = PchipInterpolator(z_vals, offset_vals)
+                        offset = offset_interp(z)
+                        ref_origin = np.array(ref_web["origin"])
+                        ref_normal = np.array(ref_web["orientation"])
+                        normal_unit = ref_normal / np.linalg.norm(ref_normal)
+                        new_origin = ref_origin + offset * normal_unit
+                        sw_def = {
+                            "type": "plane",
+                            "origin": new_origin.tolist(),
+                            "normal": ref_normal.tolist(),
+                            "name": web["name"],
+                        }
+                        sw = ShearWeb(sw_def)
+                        af.add_shear_web(sw, n_elements=10)  # Default, or from config if added
+                        logger.debug(f"Added ribbon shear web {web['name']} at z={z}")
+                    else:
+                        sw_def = {
+                            "type": web["type"],
+                            "origin": [web["origin"][0], web["origin"][1], web["origin"][2]],
+                            "normal": web["orientation"],
+                            "name": web["name"],
+                        }
+                        sw = ShearWeb(sw_def)
+                        af.add_shear_web(sw, n_elements=10)  # Default n_elements
+                        logger.debug(f"Added shear web {web['name']} at z={z}")
+
+        # Add trailing edge shear web
+        sw_te = ShearWeb({"type": "trailing_edge", "name": "trailing_edge"})
+        af.add_shear_web(sw_te, n_elements=5)
+        logger.debug(f"Added trailing edge shear web at z={z}")
+
+        # Remesh with uniform t distribution
+        n_elem = chordwise_mesh["default"]["n_elem"]
+        logger.debug(f"Remeshing with {n_elem} elements")
+        af.remesh(total_n_points=n_elem + 1)
+
+        return af
+
     def _execute(self):
         """Execute the step."""
         self.logger.info("Executing B3MshStep: Processing blade mesh.")
@@ -117,55 +194,3 @@ class B3MshStep(Statesman):
         sections = self._process_sections(mesh, z_sections, chordwise_mesh, webs_config)
         output_path = workdir / "b3_msh" / "lm2.vtp"
         self._merge_and_save_mesh(sections, output_path)
-
-    def process_section_from_mesh(self, mesh, z, chordwise_mesh, webs_config, logger):
-        """Process a single section mesh by remeshing with uniform t distribution."""
-        logger.debug(f"Processing section at z={z}")
-
-        # Extract points at this z
-        mask = np.isclose(mesh.points[:, 2], z)
-        section_points = mesh.points[mask]
-        # Sort by associated t pointdata
-        t_values = mesh.point_data["t"][mask]
-        sorted_indices = np.argsort(t_values)
-        sorted_points = section_points[sorted_indices]
-        points_2d = sorted_points[:, :2]  # Take x,y
-
-        # Create Airfoil from points
-        af = Airfoil(
-            points_2d, is_normalized=False, position=(0, 0, z)
-        )  # Position at z
-
-        # Add constant fields from input mesh
-        af.constant_fields = {}
-        for field in mesh.point_data.keys():
-            values = mesh.point_data[field][mask]
-            if np.allclose(values, values[0]):
-                af.constant_fields[field] = values[0]
-
-        # Add shear webs if applicable
-        for web in webs_config:
-            if web.mesh:
-                z_range = web.z_range
-                if z_range[0] <= z <= z_range[1]:
-                    sw_def = {
-                        "type": web.type,
-                        "origin": web.origin,  # Use full 3D origin from YAML
-                        "normal": web.orientation,
-                        "name": web.name,
-                    }
-                    sw = ShearWeb(sw_def)
-                    af.add_shear_web(sw, n_elements=10)  # Default n_elements
-                    logger.debug(f"Added shear web {web.name} at z={z}")
-
-        # Add trailing edge shear web
-        sw_te = ShearWeb({"type": "trailing_edge", "name": "trailing_edge"})
-        af.add_shear_web(sw_te, n_elements=5)
-        logger.debug(f"Added trailing edge shear web at z={z}")
-
-        # Remesh with uniform t distribution
-        n_elem = chordwise_mesh["default"]["n_elem"]
-        logger.debug(f"Remeshing with {n_elem} elements")
-        af.remesh(total_n_points=n_elem + 1)
-
-        return af

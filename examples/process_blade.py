@@ -3,7 +3,7 @@ import yaml
 import numpy as np
 import pyvista as pv
 from b3_msh.utils.logger import get_logger
-from b3_msh.core.blade_processing import process_section_from_mesh
+from b3_msh.core.mesh_step import B3MshStep
 
 
 def load_yaml_config(config_path):
@@ -45,7 +45,7 @@ def main():
     sections = []
     for z in z_values:
         logger.info(f"Processing section at z={z}")
-        af = process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
+        af = B3MshStep.process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
         sections.append(af)
 
     logger.info("Creating new MultiBlock mesh")
