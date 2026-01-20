@@ -45,7 +45,9 @@ def main():
     sections = []
     for z in z_values:
         logger.info(f"Processing section at z={z}")
-        af = B3MshStep.process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
+        af = B3MshStep.process_section_from_mesh(
+            mesh, z, chordwise_mesh, webs_config, logger
+        )
         sections.append(af)
 
     logger.info("Creating new MultiBlock mesh")

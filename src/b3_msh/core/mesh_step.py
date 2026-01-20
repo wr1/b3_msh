@@ -116,7 +116,9 @@ class B3MshStep(Statesman):
         rel_span = rel_span_values[0]  # All points at same z have same rel_span
 
         # Create Airfoil from points
-        af = Airfoil(points_2d, is_normalized=False, position=(0, 0, z))  # Position at z
+        af = Airfoil(
+            points_2d, is_normalized=False, position=(0, 0, z)
+        )  # Position at z
         af.rel_span = rel_span
 
         # Add constant fields from input mesh
@@ -134,7 +136,9 @@ class B3MshStep(Statesman):
                     if web["type"] == "ribbon":
                         # Handle ribbon web
                         ref_web_name = web["reference_web"]
-                        ref_web = next(w for w in webs_config if w["name"] == ref_web_name)
+                        ref_web = next(
+                            w for w in webs_config if w["name"] == ref_web_name
+                        )
                         z_vals = [p[0] for p in web["offsets"]]
                         offset_vals = [p[1] for p in web["offsets"]]
                         offset_interp = PchipInterpolator(z_vals, offset_vals)
@@ -150,12 +154,18 @@ class B3MshStep(Statesman):
                             "name": web["name"],
                         }
                         sw = ShearWeb(sw_def)
-                        af.add_shear_web(sw, n_elements=10)  # Default, or from config if added
+                        af.add_shear_web(
+                            sw, n_elements=10
+                        )  # Default, or from config if added
                         logger.debug(f"Added ribbon shear web {web['name']} at z={z}")
                     else:
                         sw_def = {
                             "type": web["type"],
-                            "origin": [web["origin"][0], web["origin"][1], web["origin"][2]],
+                            "origin": [
+                                web["origin"][0],
+                                web["origin"][1],
+                                web["origin"][2],
+                            ],
                             "normal": web["orientation"],
                             "name": web["name"],
                         }

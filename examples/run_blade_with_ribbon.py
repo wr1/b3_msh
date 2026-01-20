@@ -12,7 +12,7 @@ if not os.path.exists(config_path):
     )
     sys.exit(1)
 
-# Note: This assumes the input mesh exists; in practice, generate or provide lm1_mesh.vtp
+# Note: Assumes input mesh exists; generate or provide lm1_mesh.vtp
 print(f"Running blade processing with config {config_path}...")
 result = subprocess.run([sys.executable, "-m", "b3_msh.cli.cli", "blade", config_path])
 if result.returncode != 0:

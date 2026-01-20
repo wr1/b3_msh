@@ -67,7 +67,9 @@ def _process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config):
     logger.info("Processing sections")
     sections = []
     for z in z_sections:
-        af = B3MshStep.process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
+        af = B3MshStep.process_section_from_mesh(
+            mesh, z, chordwise_mesh, webs_config, logger
+        )
         sections.append(af)
     return sections
 

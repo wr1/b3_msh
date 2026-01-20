@@ -36,11 +36,9 @@ t1_no_z, t2_no_z = sw2.compute_intersections(af)
 
 logger.info("Airfoil at z=40, web origin at z=0")
 logger.info(
-    f"Intersections with z-normal ({normal_with_z}): t1={t1_z:.4f}, t2={t2_z:.4f}"
+    f"Intersections with z-normal {normal_with_z}: t1={t1_z:.4f}, t2={t2_z:.4f}"
 )
-logger.info(
-    f"Intersections without z-normal ({normal_without_z}): t1={t1_no_z:.4f}, t2={t2_no_z:.4f}"
-)
+logger.info(f"Without z-normal {normal_without_z}: t1={t1_no_z:.4f}, t2={t2_no_z:.4f}")
 
 # With true 3D, they should differ due to z-offset
 tol = 1e-6
