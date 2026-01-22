@@ -153,7 +153,7 @@ ruff.txt
 __temp.json
 __temp.txt
 .grk_*
-codefold.json
+# codefold.json
 treeparse.json
 uv.lock
 airfoil*.png
