@@ -148,10 +148,20 @@ class B3MshStep(Statesman):
                         if interp_method == "pchip":
                             offset_interp = PchipInterpolator(z_vals, offset_vals)
                         elif interp_method == "linear":
-                            offset_interp = interp1d(z_vals, offset_vals, kind="linear", bounds_error=False, fill_value="extrapolate")
+                            offset_interp = interp1d(
+                                z_vals,
+                                offset_vals,
+                                kind="linear",
+                                bounds_error=False,
+                                fill_value="extrapolate",
+                            )
                         else:
-                            logger.error(f"Unsupported interp_method '{interp_method}' for ribbon web {web['name']}")
-                            raise ValueError(f"Unsupported interp_method: {interp_method}")
+                            logger.error(
+                                f"Unsupported interp_method '{interp_method}' for ribbon web {web['name']}"
+                            )
+                            raise ValueError(
+                                f"Unsupported interp_method: {interp_method}"
+                            )
                         offset = float(offset_interp(z))
                         ref_origin = np.array(ref_web["origin"])
                         ref_normal = np.array(ref_web["orientation"])
@@ -164,9 +174,7 @@ class B3MshStep(Statesman):
                             "name": web["name"],
                         }
                         sw = ShearWeb(sw_def)
-                        af.add_shear_web(
-                            sw, n_elements=web["n_elem"]
-                        )
+                        af.add_shear_web(sw, n_elements=web.get("n_elem", 10))
                         logger.debug(f"Added ribbon shear web {web['name']} at z={z}")
                     else:
                         sw_def = {
@@ -180,7 +188,7 @@ class B3MshStep(Statesman):
                             "name": web["name"],
                         }
                         sw = ShearWeb(sw_def)
-                        af.add_shear_web(sw, n_elements=web["n_elem"])
+                        af.add_shear_web(sw, n_elements=web.get("n_elem", 10))
                         logger.debug(f"Added shear web {web['name']} at z={z}")
 
         # Add trailing edge shear web
