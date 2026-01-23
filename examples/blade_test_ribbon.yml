@@ -72,21 +72,21 @@ structure:
       origin: [0, 0, 0]
       orientation: [0.02, 1, 0]
       z_range: [1, 100]
-      element_size: 0.10
+      n_elem: 10
       mesh: false
     - name: web1
       type: plane
       origin: [0, 0.2, 0]
       orientation: [0.02, 1, 0]
       z_range: [1, 110]
-      element_size: 0.10
+      n_elem: 10
       mesh: true
     - name: web2
       type: plane
       origin: [0, -0.2, 0]
       orientation: [0.02, 1, 0.001]
       z_range: [1, 100]
-      element_size: 0.10
+      n_elem: 10
       mesh: true
     - name: ribbon1
       type: ribbon
@@ -94,7 +94,7 @@ structure:
       interp_method: linear
       offsets: [[0, 0.2], [30, 1.6], [60, 0.5], [100, 0.2]]
       z_range: [15, 65]
-      element_size: 0.10
+      n_elem: 20
       mesh: true
 
 mesh:

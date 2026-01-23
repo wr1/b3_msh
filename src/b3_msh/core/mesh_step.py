@@ -165,8 +165,8 @@ class B3MshStep(Statesman):
                         }
                         sw = ShearWeb(sw_def)
                         af.add_shear_web(
-                            sw, n_elements=10
-                        )  # Default, or from config if added
+                            sw, n_elements=web["n_elem"]
+                        )
                         logger.debug(f"Added ribbon shear web {web['name']} at z={z}")
                     else:
                         sw_def = {
@@ -180,7 +180,7 @@ class B3MshStep(Statesman):
                             "name": web["name"],
                         }
                         sw = ShearWeb(sw_def)
-                        af.add_shear_web(sw, n_elements=10)  # Default n_elements
+                        af.add_shear_web(sw, n_elements=web["n_elem"])
                         logger.debug(f"Added shear web {web['name']} at z={z}")
 
         # Add trailing edge shear web
