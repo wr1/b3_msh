@@ -6,7 +6,7 @@ from .airfoil import Airfoil
 from .shear_web import ShearWeb
 from .mesh_model import Config
 import pyvista as pv
-from scipy.interpolate import PchipInterpolator, interp1d
+from scipy.interpolate import PchipInterpolator
 
 
 class B3MshStep(Statesman):
@@ -139,20 +139,10 @@ class B3MshStep(Statesman):
                         ref_web = next(
                             w for w in webs_config if w["name"] == ref_web_name
                         )
-                        z_vals = np.array([p[0] for p in web["offsets"]])
-                        offset_vals = np.array([p[1] for p in web["offsets"]])
-                        sort_idx = np.argsort(z_vals)
-                        z_vals = z_vals[sort_idx]
-                        offset_vals = offset_vals[sort_idx]
-                        interp_method = web.get("interp_method", "pchip")
-                        if interp_method == "pchip":
-                            offset_interp = PchipInterpolator(z_vals, offset_vals)
-                        elif interp_method == "linear":
-                            offset_interp = interp1d(z_vals, offset_vals, kind="linear", bounds_error=False, fill_value="extrapolate")
-                        else:
-                            logger.error(f"Unsupported interp_method '{interp_method}' for ribbon web {web['name']}")
-                            raise ValueError(f"Unsupported interp_method: {interp_method}")
-                        offset = float(offset_interp(z))
+                        z_vals = [p[0] for p in web["offsets"]]
+                        offset_vals = [p[1] for p in web["offsets"]]
+                        offset_interp = PchipInterpolator(z_vals, offset_vals)
+                        offset = offset_interp(z)
                         ref_origin = np.array(ref_web["origin"])
                         ref_normal = np.array(ref_web["orientation"])
                         normal_unit = ref_normal / np.linalg.norm(ref_normal)
