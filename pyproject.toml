@@ -4,43 +4,86 @@ build-backend = "hatchling.build"
 
 [project]
 name = "b3_msh"
-version = "0.1.1"
-description = "A Python library for handling line meshes representing airfoils with internal structure."
-authors = [{name = "wr1", email = "8971152+wr1@users.noreply.github.com"}]
+dynamic = ["version"]
+description = "Line mesh processing for airfoils with internal structure"
 readme = "README.md"
-requires-python = ">=3.8"
+license = "MIT"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
 dependencies = [
-    "numpy",
-    "scipy",
-    "pyvista",
-    "matplotlib",
-    "pytest",
-    "pytest-cov",
-    "treeparse",
-    "pydantic",
-    "statesman @ git+https://github.com/wr1/statesman.git",
-    "pyyaml",
-    "rich",
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "pyvista>=0.40",
+    "matplotlib>=3.6",
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+    "rich>=13.0",
+    "treeparse>=0.1.0",
+    "statesman>=0.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4.0",
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "mypy>=1.5",
 ]
 
 [project.scripts]
 b3_msh = "b3_msh.cli.cli:main"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/b3_msh"]
+[project.urls]
+Homepage = "https://github.com/wr1/b3_msh"
+Repository = "https://github.com/wr1/b3_msh.git"
 
-[tool.hatch.metadata]
-allow-direct-references = true
+[tool.hatch.version]
+path = "src/b3_msh/__about__.py"
 
 [tool.ruff]
-line-length = 88
-target-version = "py38"
+line-length = 100
+target-version = "py39"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "C90"]
-ignore = []
+select = ["E", "F", "I", "UP", "B", "Q", "T20", "ARG", "P", "PT", "W", "C4", "C90", "C4", "RUF100"]
+ignore = ["E501"]
 
-# [pytest.ini_options]
-# addopts = "--cov=b3_msh "
-# testpaths = ["tests"]
-# pythonpath = ["src"]
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F403", "F405"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --import-mode=importlib"
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::FutureWarning:.*unstructured",
+]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = "pyvista.*"
+disable_error_code = ["attr-defined", "return-value"]
+
+[tool.coverage.run]
+source = ["src", "tests"]
+omit = [
+    "*/__init__.py",
+    "src/b3_msh/cli/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
