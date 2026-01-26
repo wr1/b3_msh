@@ -3,9 +3,11 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
+version = "0.1.1"
+description = "A Python library for handling line meshes representing airfoils with internal structure."
+authors = [{name = "wr1", email = "8971152+wr1@users.noreply.github.com"}]
+
 name = "b3_msh"
-dynamic = ["version"]
-description = "Line mesh processing for airfoils with internal structure"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
@@ -48,7 +50,7 @@ line-length = 100
 target-version = "py39"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "Q", "T20", "ARG", "P", "PT", "W", "C4", "C90", "C4", "RUF100"]
+select = ["E", "F", "I", "UP", "B", "Q", "T20", "ARG", "PT", "W", "C4", "C90", "C4", "RUF100"]
 ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]

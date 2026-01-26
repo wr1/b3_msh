@@ -1,4 +1,5 @@
 import numpy as np
+
 from b3_msh.core.airfoil import Airfoil
 from b3_msh.utils.utils import process_airfoils_parallel
 

@@ -13,7 +13,6 @@ af.add_hard_point(0.7)
 
 # Now there are 3 panels: 0-0.3, 0.3-0.7, 0.7-1.0
 panels = af.get_panels()
-print(f"Panels: {panels}")
 
 # Remesh with explicit number of elements per panel using dict
 # Key is panel_id (0-based index), value is n_elements
@@ -44,7 +43,6 @@ af.add_shear_web(sw, n_elements=5)
 
 # Now panels are more: depending on intersections
 panels_after = af.get_panels()
-print(f"Panels after adding shear web: {panels_after}")
 
 # Remesh with new explicit n_elements (adjust dict accordingly)
 # Assuming 4 panels now, set n_elements

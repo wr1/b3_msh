@@ -1,7 +1,8 @@
 """CLI entry point using treeparse."""
 
-from treeparse import cli, command, argument, option
-from .commands import plot, remesh, blade
+from treeparse import argument, cli, command, option
+
+from .commands import blade, plot, remesh
 
 app = cli(
     name="b3_msh",

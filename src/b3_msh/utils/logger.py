@@ -1,6 +1,7 @@
 """Get a configured logger for the given name."""
 
 import logging
+
 from rich.logging import RichHandler
 
 

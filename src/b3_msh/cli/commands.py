@@ -1,11 +1,13 @@
 import logging
-import numpy as np
 import os
-import yaml
+
+import numpy as np
 import pyvista as pv
+import yaml
+
 from ..core.airfoil import Airfoil
-from ..utils.logger import get_logger
 from ..core.mesh_step import B3MshStep
+from ..utils.logger import get_logger
 
 
 def plot(
@@ -58,7 +60,7 @@ def remesh(
 
 def _load_config(config_path):
     """Load YAML config."""
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         return yaml.safe_load(f)
 
 

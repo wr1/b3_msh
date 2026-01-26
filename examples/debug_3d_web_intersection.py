@@ -4,6 +4,7 @@ With airfoil at z=40 and web origin at z=0, z-normal affects intersections.
 """
 
 import numpy as np
+
 from b3_msh.core.airfoil import Airfoil
 from b3_msh.core.shear_web import ShearWeb
 from b3_msh.utils.logger import get_logger

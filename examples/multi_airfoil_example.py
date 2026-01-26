@@ -1,10 +1,12 @@
-import numpy as np
 import copy
+
+import numpy as np
+import pyvista as pv
+
 from b3_msh.core.airfoil import Airfoil
 from b3_msh.core.shear_web import ShearWeb
-from b3_msh.utils.utils import process_airfoils_parallel
-import pyvista as pv
 from b3_msh.utils.logger import get_logger
+from b3_msh.utils.utils import process_airfoils_parallel
 
 logger = get_logger(__name__)
 

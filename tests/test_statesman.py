@@ -1,5 +1,7 @@
-import numpy as np
 from unittest.mock import Mock, patch
+
+import numpy as np
+
 from b3_msh.core.mesh_step import B3MshStep
 
 

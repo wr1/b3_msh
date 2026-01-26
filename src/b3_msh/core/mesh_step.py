@@ -1,12 +1,14 @@
-import numpy as np
 from pathlib import Path
-from statesman import Statesman
-from statesman.core.base import ManagedFile
-from .airfoil import Airfoil
-from .shear_web import ShearWeb
-from .mesh_model import Config
+
+import numpy as np
 import pyvista as pv
 from scipy.interpolate import PchipInterpolator, interp1d
+from statesman import Statesman
+from statesman.core.base import ManagedFile
+
+from .airfoil import Airfoil
+from .mesh_model import Config
+from .shear_web import ShearWeb
 
 
 class B3MshStep(Statesman):
@@ -29,7 +31,7 @@ class B3MshStep(Statesman):
                 mesh_z.extend(
                     np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"])
                 )
-        self.config["mesh"]["z"] = sorted(list(set(mesh_z)))
+        self.config["mesh"]["z"] = sorted(set(mesh_z))
 
     def _load_and_validate_config(self):
         """Load and validate config."""

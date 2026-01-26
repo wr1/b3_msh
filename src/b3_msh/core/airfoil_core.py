@@ -3,6 +3,7 @@ spline building, and transformations."""
 
 import numpy as np
 from scipy.interpolate import PchipInterpolator
+
 from ..utils.logger import get_logger
 
 
@@ -87,7 +88,7 @@ class AirfoilCore:
         """Load airfoil from XFOIL format file."""
         cls.logger = get_logger(cls.__name__)
         cls.logger.info(f"Loading airfoil from XFOIL file: {filename}")
-        with open(filename, "r") as f:
+        with open(filename) as f:
             lines = f.readlines()
         data = np.loadtxt(lines[1:])  # Skip name line
         cls.logger.debug(f"Loaded {len(data)} points from file")

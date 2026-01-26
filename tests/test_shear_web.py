@@ -1,4 +1,5 @@
 import numpy as np
+
 from b3_msh.core.airfoil import Airfoil
 from b3_msh.core.shear_web import ShearWeb
 

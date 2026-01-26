@@ -1,14 +1,16 @@
 import os
-import yaml
+
 import numpy as np
 import pyvista as pv
-from b3_msh.utils.logger import get_logger
+import yaml
+
 from b3_msh.core.mesh_step import B3MshStep
+from b3_msh.utils.logger import get_logger
 
 
 def load_yaml_config(config_path):
     """Load YAML configuration file."""
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         config = yaml.safe_load(f)
     return config
 
