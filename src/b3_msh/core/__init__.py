@@ -6,10 +6,10 @@ from .airfoil_mesh import AirfoilMesh
 from .airfoil_viz import AirfoilViz
 from .shear_web import ShearWeb
 from .mesh_model import Config, ZSpec, Web, Mesh2D, Mesh3D
-from .mesh_base import MeshBaseStep
-from .mesh_sections import B3MshSectionStep
-from .mesh_line import B3MshLineStep
-from .mesh_surface import B3MshSurfaceStep
+from ..step.mesh_base import MeshBaseStep
+from ..step.mesh_sections import B3MshSectionStep
+from ..step.mesh_line import B3MshLineStep
+from ..step.mesh_surface import B3MshSurfaceStep
 
 __all__ = [
     "Airfoil",

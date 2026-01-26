@@ -4,7 +4,7 @@ from pathlib import Path
 from statesman import Statesman
 from statesman.core.base import ManagedFile
 from .mesh_base import MeshBaseStep
-from .surface_mesh import generate_surface_mesh
+from ..core.surface_mesh import generate_surface_mesh
 import pyvista as pv
 import pickle
 

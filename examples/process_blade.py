@@ -4,7 +4,7 @@ import pyvista as pv
 import yaml
 from pathlib import Path
 from b3_msh.core.mesh_model import Config
-from b3_msh.core.mesh_step import B3MshMultiStep, process_section_from_mesh
+from b3_msh.step.mesh_base import MeshBaseStep, process_section_from_mesh
 from b3_msh.utils.logger import get_logger
 
 
@@ -72,7 +72,8 @@ def main():
             vtm_path = output_dir / f"lm2_{mesh_config.name}_line.vtm"
             
             # Save VTP (merged)
-            B3MshMultiStep._merge_line_meshes(sections, vtp_path)  # Static method
+            from b3_msh.step.mesh_line import B3MshLineStep
+            B3MshLineStep._merge_line_meshes(sections, vtp_path)  # Static method
             logger.info(f"  Saved merged line mesh: {vtp_path}")
             
             # Save VTM (MultiBlock)
@@ -85,6 +86,7 @@ def main():
             
         elif mesh_config.type == "surface":
             # Surface mesh (stub for now)
+            from b3_msh.step.mesh_surface import B3MshSurfaceStep
             from b3_msh.core.surface_mesh import generate_surface_mesh
             surface_mesh = generate_surface_mesh(
                 sections,

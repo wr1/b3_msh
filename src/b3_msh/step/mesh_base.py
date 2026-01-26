@@ -4,9 +4,9 @@ import numpy as np
 from pathlib import Path
 from statesman import Statesman
 from statesman.core.base import ManagedFile
-from .airfoil import Airfoil
-from .shear_web import ShearWeb
-from .mesh_model import Config
+from ..core.airfoil import Airfoil
+from ..core.shear_web import ShearWeb
+from ..core.mesh_model import Config
 from ..utils.logger import get_logger
 
 

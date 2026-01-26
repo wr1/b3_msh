@@ -4,7 +4,7 @@ import pytest
 import pyvista as pv
 from pathlib import Path
 from b3_msh.core.mesh_model import Config
-from b3_msh.core.mesh_step import B3MshMultiStep
+from b3_msh.step.mesh_line import B3MshLineStep
 
 
 @pytest.fixture
@@ -56,7 +56,7 @@ def test_b3msh_multistep(sample_config):
         yaml.safe_dump(config_data, f)
     
     # Run step
-    step = B3MshMultiStep(config_path=str(config_path))
+    step = B3MshLineStep(config_path=str(config_path))
     step._execute()
     
     # Check outputs
