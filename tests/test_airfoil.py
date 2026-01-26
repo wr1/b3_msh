@@ -134,9 +134,8 @@ def test_plot_show_hard_points():
 
 def test_process_parallel():
     """Test parallel processing of airfoils."""
-    points = np.array([[0, 0], [0.5, 0.1], [1, 0]])
-    af1 = Airfoil(points)
-    af2 = Airfoil(points)
+    af1 = Airfoil(np.array([[0, 0], [0.5, 0.1], [1, 0]]))
+    af2 = Airfoil(np.array([[0, 0], [0.5, 0.1], [1, 0]]))
     airfoils = [af1, af2]
     results = process_airfoils_parallel(airfoils, dummy_func)
     assert len(results) == 2

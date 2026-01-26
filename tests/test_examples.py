@@ -1,7 +1,6 @@
 import os
 import subprocess
 import sys
-
 import pytest
 
 # List of example scripts to test

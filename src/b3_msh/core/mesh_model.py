@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Any, Optional, Literal, Union
 import numpy as np
 
@@ -6,7 +6,7 @@ import numpy as np
 class ZSpec(BaseModel):
     type: Literal["plain", "linspace"]
     values: List[float]
-    num: Optional[int] = None  # Only for linspace
+    num: Optional[int] = Field(None, description="Only for linspace")
 
 
 class Planform(BaseModel):
@@ -34,7 +34,7 @@ class Web(BaseModel):
     type: Literal["plane", "line", "ribbon", "trailing_edge"]
     origin: Optional[List[float]] = None
     orientation: Optional[List[float]] = None
-    normal: Optional[List[float]] = None  # alias for orientation
+    normal: Optional[List[float]] = Field(None, description="alias for orientation")
     z_range: Optional[List[float]] = None
     element_size: Optional[float] = None
     mesh: bool = True
@@ -43,9 +43,12 @@ class Web(BaseModel):
     n_elem: Optional[int] = None
     interp_method: Literal["pchip", "linear"] = "pchip"
 
-    @validator("normal", pre=True, always=True)
-    def normal_or_orientation(cls, v, values):
-        return v or values.get("orientation")
+    @field_validator("normal", mode="before")
+    @classmethod
+    def normal_or_orientation(cls, v, info):
+        if v is not None:
+            return v
+        return info.data.get("orientation")
 
 
 class Structure(BaseModel):
@@ -79,7 +82,8 @@ MeshConfig = Union[Mesh2D, Mesh3D]
 class Mesh(BaseModel):
     meshes: List[MeshConfig] = Field(..., description="List of 2D/3D mesh configurations")
 
-    @validator("meshes")
+    @field_validator("meshes")
+    @classmethod
     def validate_unique_names(cls, v):
         names = [mesh.name for mesh in v]
         if len(names) != len(set(names)):
@@ -94,7 +98,8 @@ class Config(BaseModel):
     structure: Structure
     mesh: Union[Mesh, Dict] = Field(..., description="Mesh config (list or legacy single dict)")
 
-    @validator("mesh", pre=True)
+    @field_validator("mesh", mode="before")
+    @classmethod
     def handle_legacy_mesh(cls, v):
         """Convert legacy single mesh dict to list format"""
         if isinstance(v, dict) and "z" in v and "chordwise" in v:
@@ -104,14 +109,15 @@ class Config(BaseModel):
                     {
                         "name": "default",
                         "type": "line",
-                        "z": [ZSpec.parse_obj({"type": "plain", "values": v["z"]}).dict()],
+                        "z": [{"type": "plain", "values": v["z"]}], 
                         "chordwise": v["chordwise"]
                     }
                 ]
             }
         return v
 
-    @validator("mesh")
+    @field_validator("mesh")
+    @classmethod
     def ensure_mesh_is_list(cls, v):
         if not isinstance(v, dict) or "meshes" not in v:
             raise ValueError("'mesh' must contain 'meshes' list or be legacy dict")
@@ -153,8 +159,8 @@ if __name__ == "__main__":
             ]
         }
     }
-    config = Config(**config_data)
-    print(config)
+    config = Config.model_validate(config_data)
+    print(config.model_dump_json(indent=2))
 
     # Test legacy
     legacy_data = {
@@ -164,5 +170,5 @@ if __name__ == "__main__":
         "structure": {"webs": []},
         "mesh": {"z": [4, 20, 50], "chordwise": {"default": {"n_elem": 40}}}
     }
-    legacy_config = Config(**legacy_data)
-    print(legacy_config)
+    legacy_config = Config.model_validate(legacy_data)
+    print(legacy_config.model_dump_json(indent=2))
