@@ -36,7 +36,7 @@ class B3MshSurfaceStep(MeshBaseStep):
         self.logger.info(f"Loaded {len(sections)} sections")
         
         # Process each surface mesh config
-        for mesh_config in self.config_model.mesh.meshes:
+        for mesh_config in self.config_model.mesh:
             if mesh_config.type == "surface":
                 self._process_surface_mesh(mesh_config, sections, workdir)
         
@@ -45,8 +45,6 @@ class B3MshSurfaceStep(MeshBaseStep):
     def _process_surface_mesh(self, mesh_config, sections, workdir):
         """Process a single surface mesh config."""
         self.logger.info(f"Processing surface mesh '{mesh_config.name}'")
-        self.logger.info(f"  spanwise_n_elem: {mesh_config.spanwise_n_elem}")
-        self.logger.info(f"  closure: {mesh_config.closure}")
         
         z_sections = self._expand_z_locations(mesh_config.z)
         self.logger.info(f"  z-sections: {len(z_sections)} locations")
@@ -58,11 +56,7 @@ class B3MshSurfaceStep(MeshBaseStep):
                 filtered_sections.append(af)
         
         # Generate surface mesh
-        surface_mesh = generate_surface_mesh(
-            filtered_sections,
-            spanwise_n_elem=mesh_config.spanwise_n_elem,
-            closure=mesh_config.closure
-        )
+        surface_mesh = generate_surface_mesh(filtered_sections)
         
         # Save outputs
         vtp_path = workdir / "b3_msh" / f"lm2_{mesh_config.name}_surface.vtp"

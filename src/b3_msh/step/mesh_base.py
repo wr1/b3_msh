@@ -26,14 +26,10 @@ class MeshBaseStep(Statesman):
         """Expand z specs to flat list of z-locations."""
         mesh_z = []
         for z_spec in z_specs:
-            if z_spec.type == "plain":
-                mesh_z.extend(z_spec.values)
-            elif z_spec.type == "linspace":
-                mesh_z.extend(
-                    np.linspace(
-                        z_spec.values[0], z_spec.values[1], z_spec.num
-                    )
-                )
+            if z_spec["type"] == "plain":
+                mesh_z.extend(z_spec["values"])
+            elif z_spec["type"] == "linspace":
+                mesh_z.extend(np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"]))
         return sorted(list(set(mesh_z)))
 
     def _load_and_validate_config(self):
@@ -46,10 +42,10 @@ class MeshBaseStep(Statesman):
         self.logger.info(f"Loading pre-processed mesh from {input_path}")
         if not input_path.exists():
             raise FileNotFoundError(
-                f"Input file {input_path} does not exist. "
-                "Ensure previous steps have run."
+                f"Input file {input_path} does not exist. Ensure previous steps have run."
             )
         import pyvista as pv
+
         mesh = pv.read(str(input_path))
         return mesh
 
@@ -57,11 +53,16 @@ class MeshBaseStep(Statesman):
     def process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger):
         """Process a single section mesh by remeshing with uniform t distribution."""
         logger.debug(f"Processing section at z={z}")
-        
+
+        logger.info(f"  Extracting section at z={mesh.points}")
+
         # Extract points at this z
         mask = np.isclose(mesh.points[:, 2], z, atol=1e-6)
+
         section_points = mesh.points[mask]
-        
+
+        logger.info(f"  Found {section_points.shape[0]} points at z={z}")
+
         # Sort by associated t pointdata
         t_values = mesh.point_data["t"][mask]
         sorted_indices = np.argsort(t_values)
@@ -73,9 +74,7 @@ class MeshBaseStep(Statesman):
         rel_span = float(rel_span_values[0])  # All same
 
         # Create Airfoil
-        af = Airfoil(
-            points_2d, is_normalized=False, position=(0, 0, z)
-        )
+        af = Airfoil(points_2d, is_normalized=False, position=(0, 0, z))
         af.rel_span = rel_span
 
         # Copy constant fields
@@ -93,29 +92,34 @@ class MeshBaseStep(Statesman):
                     if web["type"] == "ribbon":
                         ref_web_name = web["reference_web"]
                         ref_web = next(w for w in webs_config if w["name"] == ref_web_name)
-                        
+
                         z_vals = np.array([p[0] for p in web["offsets"]])
                         offset_vals = np.array([p[1] for p in web["offsets"]])
                         sort_idx = np.argsort(z_vals)
                         z_vals, offset_vals = z_vals[sort_idx], offset_vals[sort_idx]
-                        
+
                         interp_method = web.get("interp_method", "pchip")
                         if interp_method == "pchip":
                             from scipy.interpolate import PchipInterpolator
+
                             offset_interp = PchipInterpolator(z_vals, offset_vals)
                         else:  # linear
                             from scipy.interpolate import interp1d
+
                             offset_interp = interp1d(
-                                z_vals, offset_vals,
-                                kind="linear", bounds_error=False, fill_value="extrapolate"
+                                z_vals,
+                                offset_vals,
+                                kind="linear",
+                                bounds_error=False,
+                                fill_value="extrapolate",
                             )
-                        
+
                         offset = float(offset_interp(z))
                         ref_origin = np.array(ref_web["origin"])
-                        ref_normal = np.array(ref_web["normal"])
+                        ref_normal = np.array(ref_web.get("normal", ref_web.get("orientation")))
                         normal_unit = ref_normal / np.linalg.norm(ref_normal)
                         new_origin = ref_origin + offset * normal_unit
-                        
+
                         sw_def = {
                             "type": "plane",
                             "origin": new_origin.tolist(),
@@ -126,10 +130,10 @@ class MeshBaseStep(Statesman):
                         sw_def = {
                             "type": web["type"],
                             "origin": web["origin"],
-                            "normal": web["normal"],
+                            "normal": web.get("normal", web.get("orientation")),
                             "name": web["name"],
                         }
-                    
+
                     sw = ShearWeb(sw_def)
                     n_elements = web.get("n_elem", 10)
                     af.add_shear_web(sw, n_elements=n_elements)
@@ -143,5 +147,5 @@ class MeshBaseStep(Statesman):
         n_elem = chordwise_mesh["default"]["n_elem"]
         af.remesh(total_n_points=n_elem + 1)
         logger.debug(f"  Remeshed: {len(af.current_t)} points")
-        
+
         return af

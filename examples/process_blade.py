@@ -4,7 +4,7 @@ import pyvista as pv
 import yaml
 from pathlib import Path
 from b3_msh.core.mesh_model import Config
-from b3_msh.step.mesh_base import MeshBaseStep, process_section_from_mesh
+from b3_msh.step.mesh_base import MeshBaseStep
 from b3_msh.utils.logger import get_logger
 
 
@@ -21,31 +21,37 @@ def main():
     logger.info("Starting blade remeshing")
 
     config_path = "examples/blade_test.yml"
+    logger.info(f"Loading config from {config_path}")
     config = load_yaml_config(config_path)
-    logger.info(f"Loaded config with {len(config.mesh.meshes)} meshes")
+    logger.info(f"Loaded config with workdir: {config.workdir}, {len(config.mesh)} meshes")
 
-    workdir_path = Path(config.workdir).resolve()
-    input_path = workdir_path / "b3_geo" / "lm1_mesh.vtp"
+    config_dir = os.path.dirname(os.path.abspath(config_path))
+    workdir = os.path.join(config_dir, config.workdir)
+    workdir_path = Path(workdir)
     
-    logger.info(f"Loading pre-processed mesh from {input_path}")
-    if not input_path.exists():
-        raise FileNotFoundError(f"{input_path} not found")
-    
-    mesh = pv.read(str(input_path))
-    logger.info(f"Loaded mesh: {mesh.n_points} points, {mesh.n_cells} cells")
-
     # Process each mesh configuration
-    for mesh_config in config.mesh.meshes:
+    for mesh_config in config.mesh:
         logger.info(f"\n--- Processing mesh '{mesh_config.name}' ({mesh_config.type}) ---")
         
+        input_path = workdir_path / "b3_geo" / f"lm1_{mesh_config.name}.vtp"
+        
+        logger.info(f"Loading pre-processed mesh from {input_path}")
+        if not input_path.exists():
+            raise FileNotFoundError(f"{input_path} not found")
+        
+        mesh = pv.read(str(input_path))
+        logger.info(f"Loaded mesh: {mesh.n_points} points, {mesh.n_cells} cells")
+
         # Expand z-locations
         z_values = []
         for z_spec in mesh_config.z:
-            if z_spec.type == "plain":
-                z_values.extend(z_spec.values)
-            elif z_spec.type == "linspace":
+            if z_spec["type"] == "plain":
+                z_values.extend(z_spec["values"])
+            elif z_spec["type"] == "linspace":
                 z_values.extend(
-                    np.linspace(z_spec.values[0], z_spec.values[1], z_spec.num)
+                    np.linspace(
+                        z_spec["values"][0], z_spec["values"][1], z_spec["num"]
+                    )
                 )
         z_values = sorted(list(set(z_values)))
         logger.info(f"  z-sections: {len(z_values)} locations")
@@ -54,10 +60,10 @@ def main():
         webs_config_dict = [web.model_dump() for web in config.structure.webs]
 
         # Process sections
+        logger.info(f"  Processing {len(z_values)} sections")
         sections = []
         for z in z_values:
-            logger.info(f"  Processing section z={z:.1f}")
-            af = process_section_from_mesh(
+            af = MeshBaseStep.process_section_from_mesh(
                 mesh, z, chordwise_mesh, webs_config_dict, logger
             )
             sections.append(af)
@@ -85,14 +91,9 @@ def main():
             logger.info(f"  Saved MultiBlock: {vtm_path}")
             
         elif mesh_config.type == "surface":
-            # Surface mesh (stub for now)
-            from b3_msh.step.mesh_surface import B3MshSurfaceStep
+            # Surface mesh
             from b3_msh.core.surface_mesh import generate_surface_mesh
-            surface_mesh = generate_surface_mesh(
-                sections,
-                spanwise_n_elem=mesh_config.spanwise_n_elem,
-                closure=mesh_config.closure
-            )
+            surface_mesh = generate_surface_mesh(sections)
             vtp_path = output_dir / f"lm2_{mesh_config.name}_surface.vtp"
             surface_mesh.save(str(vtp_path))
             logger.info(f"  Saved surface mesh: {vtp_path} ({surface_mesh.n_cells:,} cells)")

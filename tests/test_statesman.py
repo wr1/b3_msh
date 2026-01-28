@@ -2,8 +2,10 @@
 
 import pytest
 import pyvista as pv
+import numpy as np
 from pathlib import Path
 from b3_msh.core.mesh_model import Config
+from b3_msh.step.mesh_sections import B3MshSectionStep
 from b3_msh.step.mesh_line import B3MshLineStep
 
 
@@ -13,7 +15,17 @@ def sample_config(tmp_path):
     config_path = tmp_path / "test_config.yml"
     config_data = {
         "workdir": str(tmp_path),
-        "geometry": {"planform": {"npchord": 200}},
+        "geometry": {
+            "planform": {
+                "npchord": 200,
+                "dx": [[0.0]],
+                "dy": [[0.0]],
+                "z": [[0.0]],
+                "chord": [[1.0]],
+                "thickness": [[0.1]],
+                "twist": [[0.0]]
+            }
+        },
         "airfoils": [],
         "structure": {"webs": []},
         "mesh": {
@@ -37,7 +49,7 @@ def sample_config(tmp_path):
         [0.0, 0.0, 10.0], [0.5, 0.1, 10.0], [1.0, 0.0, 10.0],
         [0.0, 0.0, 20.0], [0.5, 0.1, 20.0], [1.0, 0.0, 20.0]
     ])
-    lines = np.array([3, 0, 1, 2, 3, 4, 5])
+    lines = np.array([3, 0, 1, 2, 3, 3, 4, 5])
     poly = pv.PolyData(points, lines=lines)
     poly["t"] = [0.0, 0.5, 1.0, 0.0, 0.5, 1.0]
     poly["rel_span"] = [0.1, 0.1, 0.1, 0.2, 0.2, 0.2]
@@ -55,7 +67,11 @@ def test_b3msh_multistep(sample_config):
     with open(config_path, "w") as f:
         yaml.safe_dump(config_data, f)
     
-    # Run step
+    # Run section step first
+    section_step = B3MshSectionStep(config_path=str(config_path))
+    section_step._execute()
+    
+    # Run line step
     step = B3MshLineStep(config_path=str(config_path))
     step._execute()
     

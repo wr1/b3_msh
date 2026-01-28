@@ -36,7 +36,7 @@ class B3MshLineStep(MeshBaseStep):
         self.logger.info(f"Loaded {len(sections)} sections")
         
         # Process each line mesh config
-        for mesh_config in self.config_model.mesh.meshes:
+        for mesh_config in self.config_model.mesh:
             if mesh_config.type == "line":
                 self._process_line_mesh(mesh_config, sections, workdir)
         
@@ -79,7 +79,8 @@ class B3MshLineStep(MeshBaseStep):
             self.logger.info(f"Merging line mesh: {output_path}")
             self._merge_line_meshes(sections, output_path)
 
-    def _merge_line_meshes(self, sections, output_path):
+    @staticmethod
+    def _merge_line_meshes(sections, output_path):
         """Merge line meshes into single PolyData."""
         meshes = [af.to_pyvista() for af in sections]
         rmeshes = []

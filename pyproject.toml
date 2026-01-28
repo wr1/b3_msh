@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling"
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 version = "0.1.1"
@@ -13,7 +13,6 @@ license = "MIT"
 requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
 ]
 dependencies = [
     "numpy>=1.24",
@@ -25,6 +24,7 @@ dependencies = [
     "rich>=13.0",
     "treeparse>=0.1.0",
     "statesman>=0.1.0",
+    "b3-geo",
 ]
 
 [project.optional-dependencies]
@@ -41,9 +41,6 @@ b3_msh = "b3_msh.cli.cli:main"
 [project.urls]
 Homepage = "https://github.com/wr1/b3_msh"
 Repository = "https://github.com/wr1/b3_msh.git"
-
-[tool.hatch.version]
-path = "src/b3_msh/__about__.py"
 
 [tool.ruff]
 line-length = 100
@@ -89,3 +86,6 @@ omit = [
 [tool.coverage.report]
 show_missing = true
 skip_covered = false
+
+[tool.uv.sources]
+b3-geo = { workspace = true }

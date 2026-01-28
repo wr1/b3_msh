@@ -7,7 +7,7 @@ from .airfoil import Airfoil
 
 
 def connect_sections(
-    section1: Airfoil, section2: Airfoil, n_spanwise: int = 20
+    section1: Airfoil, section2: Airfoil
 ) -> pv.UnstructuredGrid:
     """Connect two consecutive airfoil sections with quad elements."""
     
@@ -30,31 +30,30 @@ def connect_sections(
         p1 = points1[i]
         p2 = points2[j_closest]
         
-        # Create spanwise subdivision
-        span_points = np.linspace(p1, p2, n_spanwise + 1)
+        # Create spanwise subdivision (single quad)
+        span_points = [p1, p2]
         all_points.extend(span_points)
         
-        # Create quad cells (n_spanwise quads per chordwise location)
-        for k in range(n_spanwise):
-            # Quad: bottom-left, bottom-right, top-right, top-left
-            idx_bl = len(all_points) - (n_spanwise + 1) + k
+        # Create quad cell
+        if i < len(t1) - 1:
+            idx_bl = len(all_points) - 2
             idx_br = idx_bl + 1
-            idx_tr = len(all_points) - 1 - (n_spanwise - k)
-            idx_tl = idx_tr - 1
-            
-            all_cells.extend([4, idx_bl, idx_br, idx_tr, idx_tl])
+            # Next span
+            next_idx_bl = idx_bl + 2
+            next_idx_br = idx_br + 2
+            all_cells.extend([4, idx_bl, idx_br, next_idx_br, next_idx_bl])
             cell_data.extend([
                 section1.rel_span,  # rel_span
                 (section1.current_points[0, 2] + section2.current_points[0, 2]) / 2,  # z_mid
                 t1_i,  # t_chord
-                float(k) / n_spanwise  # w_span
+                0.5  # w_span
             ])
     
     all_points = np.array(all_points)
     
     # Create unstructured grid
     ugrid = pv.UnstructuredGrid(
-        all_points, np.array(all_cells)
+        points=all_points, cells=np.array(all_cells), cell_type=pv.CellType.QUAD
     )
     
     # Add cell data
@@ -84,40 +83,8 @@ def merge_surfaces(surface_sections: List[pv.UnstructuredGrid]) -> pv.PolyData:
     return merged
 
 
-def add_caps(surface_mesh: pv.UnstructuredGrid, cap_type: str = "both") -> pv.UnstructuredGrid:
-    """Add end caps to surface mesh."""
-    # Extract first/last spanwise rings
-    n_points_per_ring = surface_mesh.n_cells // 20  # Approximate
-    
-    if cap_type in ["root", "both"]:
-        # Root cap (first ring)
-        root_points = surface_mesh.points[:n_points_per_ring]
-        root_triangles = _triangulate_ring(root_points)
-        surface_mesh += pv.UnstructuredGrid(root_triangles)
-    
-    if cap_type in ["tip", "both"]:
-        # Tip cap (last ring)
-        tip_start = -n_points_per_ring
-        tip_points = surface_mesh.points[tip_start:]
-        tip_triangles = _triangulate_ring(tip_points)
-        surface_mesh += pv.UnstructuredGrid(tip_triangles)
-    
-    return surface_mesh
-
-
-def _triangulate_ring(points: np.ndarray) -> tuple:
-    """Convert closed ring to triangle fan."""
-    n = len(points)
-    cells = []
-    for i in range(n-2):
-        cells.extend([3, 0, i+1, i+2])
-    return points, np.array(cells)
-
-
 def generate_surface_mesh(
-    sections: List[Airfoil],
-    spanwise_n_elem: int = 20,
-    closure: str = "open"
+    sections: List[Airfoil]
 ) -> pv.PolyData:
     """Generate complete surface mesh from airfoil sections."""
     
@@ -130,16 +97,11 @@ def generate_surface_mesh(
     surface_sections = []
     for i in range(len(sections) - 1):
         section_mesh = connect_sections(
-            sections[i], sections[i+1],
-            n_spanwise=spanwise_n_elem
+            sections[i], sections[i+1]
         )
         surface_sections.append(section_mesh)
     
     # Merge all surface sections
     merged_surface = merge_surfaces(surface_sections)
-    
-    # Add caps if requested
-    if closure != "open":
-        merged_surface = add_caps(merged_surface, closure)
     
     return merged_surface

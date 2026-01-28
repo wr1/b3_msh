@@ -33,7 +33,7 @@ class B3MshSectionStep(MeshBaseStep):
         
         # Process all sections
         sections = []
-        chordwise_mesh = self.config_model.mesh.meshes[0].chordwise.model_dump()  # Assume first mesh for now
+        chordwise_mesh = self.config_model.mesh[0].chordwise.model_dump()  # Assume first mesh for now
         webs_config = [web.model_dump() for web in self.config_model.structure.webs]
         
         for z in z_sections:
