@@ -30,8 +30,6 @@ def test_b3msh_step_execute():
         "geometry": {
             "planform": {
                 "npchord": 10,
-                "npspan": 10,
-                "pre_rotation": 0,
                 "dx": [],
                 "dy": [],
                 "z": [],

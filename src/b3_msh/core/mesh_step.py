@@ -24,18 +24,19 @@ class B3MshStep(Statesman):
     def _expand_mesh_z(self):
         """Expand mesh.z from specs to list of floats."""
         mesh_z = []
-        for z_spec in self.config["mesh"]["z"]:
-            if z_spec["type"] == "plain":
-                mesh_z.extend(z_spec["values"])
-            elif z_spec["type"] == "linspace":
+        for z_spec in self.config_model.mesh.z:
+            if z_spec.type == "plain":
+                mesh_z.extend(z_spec.values)
+            elif z_spec.type == "linspace":
                 mesh_z.extend(
-                    np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"])
+                    np.linspace(z_spec.values[0], z_spec.values[1], z_spec.num)
                 )
-        self.config["mesh"]["z"] = sorted(set(mesh_z))
+        self.config_model.mesh.z = sorted(set(mesh_z))
 
     def _load_and_validate_config(self):
         """Load and validate config."""
         config_model = Config(**self.config)
+        self.config_model = config_model
         return config_model
 
     def _load_mesh(self, input_path):
@@ -208,14 +209,13 @@ class B3MshStep(Statesman):
     def _execute(self):
         """Execute the step."""
         self.logger.info("Executing B3MshStep: Processing blade mesh.")
-        self._expand_mesh_z()
         config_model = self._load_and_validate_config()
+        self._expand_mesh_z()
 
         config_dir = Path(self.config_path).parent
         workdir = config_dir / config_model.workdir
-        mesh_config = config_model.mesh
-        z_sections = mesh_config.z
-        chordwise_mesh = mesh_config.chordwise
+        z_sections = config_model.mesh.z
+        chordwise_mesh = config_model.mesh.chordwise
         webs_config = config_model.structure.webs
 
         input_path = workdir / "b3_geo" / "lm1_mesh.vtp"
