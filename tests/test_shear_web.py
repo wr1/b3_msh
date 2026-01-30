@@ -105,7 +105,7 @@ def test_trailing_edge_panel_id():
     # Check that the cells for trailing edge have -10
     n_airfoil_cells = len(af.current_points) - 1
     cell_start = n_airfoil_cells
-    for i, sw in enumerate(af.shear_webs):
+    for _i, sw in enumerate(af.shear_webs):
         n_cells_web = af.shear_web_n_elements[sw]
         if sw.definition["type"] == "trailing_edge":
             assert np.all(panel_ids[cell_start : cell_start + n_cells_web] == -10)

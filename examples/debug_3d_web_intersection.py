@@ -19,9 +19,7 @@ origin = (0.5, 0, 0)  # z=0
 normal_with_z = (1, 0, 0.001)  # Has z-component
 normal_without_z = (1, 0, 0)  # No z-component
 
-sw1 = ShearWeb(
-    {"type": "plane", "origin": origin, "normal": normal_with_z, "name": "web_with_z"}
-)
+sw1 = ShearWeb({"type": "plane", "origin": origin, "normal": normal_with_z, "name": "web_with_z"})
 sw2 = ShearWeb(
     {
         "type": "plane",
@@ -36,9 +34,7 @@ t1_z, t2_z = sw1.compute_intersections(af)
 t1_no_z, t2_no_z = sw2.compute_intersections(af)
 
 logger.info("Airfoil at z=40, web origin at z=0")
-logger.info(
-    f"Intersections with z-normal {normal_with_z}: t1={t1_z:.4f}, t2={t2_z:.4f}"
-)
+logger.info(f"Intersections with z-normal {normal_with_z}: t1={t1_z:.4f}, t2={t2_z:.4f}")
 logger.info(f"Without z-normal {normal_without_z}: t1={t1_no_z:.4f}, t2={t2_no_z:.4f}")
 
 # With true 3D, they should differ due to z-offset

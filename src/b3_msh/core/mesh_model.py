@@ -1,33 +1,37 @@
-from pydantic import BaseModel, Field, validator
-from typing import List, Dict, Any, Optional, Literal, Union
-import numpy as np
+from typing import Any, Literal, Optional
+
+from pydantic import BaseModel, validator
 
 
 class ZSpec(BaseModel):
     """Specification for z values."""
+
     type: Literal["plain", "linspace"]
-    values: List[float]
+    values: list[float]
     num: Optional[int] = None  # Only for linspace
 
 
 class Planform(BaseModel):
     """Planform data."""
+
     npchord: int
-    dx: List[List[float]]
-    dy: List[List[float]]
-    z: List[List[float]]
-    chord: List[List[float]]
-    thickness: List[List[float]]
-    twist: List[List[float]]
+    dx: list[list[float]]
+    dy: list[list[float]]
+    z: list[list[float]]
+    chord: list[list[float]]
+    thickness: list[list[float]]
+    twist: list[list[float]]
 
 
 class Geometry(BaseModel):
     """Geometry configuration."""
+
     planform: Planform
 
 
 class AirfoilItem(BaseModel):
     """Airfoil item."""
+
     path: str
     name: str
     thickness: float
@@ -35,16 +39,17 @@ class AirfoilItem(BaseModel):
 
 class Web(BaseModel):
     """Shear web configuration."""
+
     name: str
     type: Literal["plane", "line", "ribbon", "trailing_edge"]
-    origin: Optional[List[float]] = None
-    orientation: Optional[List[float]] = None
-    normal: Optional[List[float]] = None  # alias for orientation
-    z_range: Optional[List[float]] = None
+    origin: Optional[list[float]] = None
+    orientation: Optional[list[float]] = None
+    normal: Optional[list[float]] = None  # alias for orientation
+    z_range: Optional[list[float]] = None
     element_size: Optional[float] = None
     mesh: bool = True
     reference_web: Optional[str] = None
-    offsets: Optional[List[List[float]]] = None
+    offsets: Optional[list[list[float]]] = None
     n_elem: Optional[int] = None
     interp_method: Literal["pchip", "linear"] = "pchip"
 
@@ -55,26 +60,30 @@ class Web(BaseModel):
 
 class Structure(BaseModel):
     """Structure configuration."""
-    webs: List[Web]
+
+    webs: list[Web]
 
 
 class Chordwise(BaseModel):
     """Chordwise mesh configuration."""
-    default: Dict[str, Any]
-    panels: Optional[List[Dict[str, Any]]] = None
+
+    default: dict[str, Any]
+    panels: Optional[list[dict[str, Any]]] = None
 
 
 class Mesh(BaseModel):
     """Mesh configuration."""
-    z: List[ZSpec]
+
+    z: list[ZSpec]
     chordwise: Chordwise
 
 
 class Config(BaseModel):
     """Main configuration."""
+
     workdir: str
     geometry: Geometry
-    airfoils: List[AirfoilItem]
+    airfoils: list[AirfoilItem]
     structure: Structure
     mesh: Mesh
 
@@ -82,7 +91,8 @@ class Config(BaseModel):
 # Legacy compatibility (for existing code)
 class LegacyMesh(BaseModel):
     """Legacy mesh format."""
-    z: List[float]
+
+    z: list[float]
     chordwise: Chordwise
 
 
@@ -96,13 +106,12 @@ if __name__ == "__main__":
         "mesh": {
             "z": [
                 {"type": "plain", "values": [4, 20.25, 50, 80]},
-                {"type": "linspace", "values": [3, 100], "num": 50}
+                {"type": "linspace", "values": [3, 100], "num": 50},
             ],
-            "chordwise": {"default": {"n_elem": 40}}
-        }
+            "chordwise": {"default": {"n_elem": 40}},
+        },
     }
     config = Config(**config_data)
-    print(config)
 
     # Test legacy
     legacy_data = {
@@ -110,7 +119,6 @@ if __name__ == "__main__":
         "geometry": {"planform": {"npchord": 200}},
         "airfoils": [],
         "structure": {"webs": []},
-        "mesh": {"z": [4, 20, 50], "chordwise": {"default": {"n_elem": 40}}}
+        "mesh": {"z": [4, 20, 50], "chordwise": {"default": {"n_elem": 40}}},
     }
     legacy_config = Config(**legacy_data)
-    print(legacy_config)

@@ -8,9 +8,7 @@ logger = get_logger(__name__)
 af = Airfoil.from_xfoil("examples/naca0018.dat")
 
 # Add shear web with refinement
-sw = ShearWeb(
-    {"type": "plane", "origin": (0.5, 0, 0), "normal": (1, 0, 0), "name": "spar"}
-)
+sw = ShearWeb({"type": "plane", "origin": (0.5, 0, 0), "normal": (1, 0, 0), "name": "spar"})
 af.add_shear_web(sw, refinement_factor=2.0)
 
 # Add trailing edge shear web

@@ -1,5 +1,4 @@
-"""Visualization functionality for Airfoil,
-including plotting and PyVista export."""
+"""Visualization functionality for Airfoil, including plotting and PyVista export."""
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,8 +8,7 @@ from ..utils.logger import get_logger
 
 
 class AirfoilViz:
-    """Visualization functionality for Airfoil,
-    including plotting and PyVista export."""
+    """Visualization functionality for Airfoil, including plotting and PyVista export."""
 
     def __init__(self):
         self.logger = get_logger(self.__class__.__name__)
@@ -63,9 +61,7 @@ class AirfoilViz:
             total_cells += n
         cell_data = np.zeros(total_cells, dtype=int)
         sorted_hp = sorted(self.hard_points)
-        hp_indices = [
-            np.where(np.isclose(self.current_t, hp))[0][0] for hp in sorted_hp
-        ]
+        hp_indices = [np.where(np.isclose(self.current_t, hp))[0][0] for hp in sorted_hp]
         for p_idx in range(len(hp_indices) - 1):
             start_idx = hp_indices[p_idx]
             end_idx = hp_indices[p_idx + 1]
@@ -114,9 +110,7 @@ class AirfoilViz:
             ]
         )
         # Add w values for webs
-        poly.point_data["w"] = np.concatenate(
-            [np.full(len(self.current_points), np.nan), web_w]
-        )
+        poly.point_data["w"] = np.concatenate([np.full(len(self.current_points), np.nan), web_w])
         # Add z values
         poly.point_data["z"] = all_points[:, 2]
         # Add rel_span if available (for backward compatibility)

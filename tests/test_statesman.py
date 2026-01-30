@@ -2,7 +2,7 @@ from unittest.mock import Mock, patch
 
 import numpy as np
 
-from b3_msh.core.mesh_step import B3MshStep
+from b3_msh.step.blade_mesh_step import B3MshStep
 
 
 def test_b3msh_step_attributes():
@@ -62,15 +62,13 @@ def test_b3msh_step_execute():
     mock_af.to_pyvista = Mock(return_value=mock_mesh)
     step.process_section_from_mesh = Mock(return_value=mock_af)
     # Mock pv.read
-    with patch(
-        "b3_msh.core.mesh_step.pv.read", return_value=mock_mesh
-    ) as mock_read, patch(
-        "b3_msh.core.mesh_step.pv.MultiBlock"
-    ) as mock_multiblock, patch("pathlib.Path.exists", return_value=True), patch(
-        "b3_msh.core.mesh_step.pv.merge", return_value=mock_mesh
-    ) as mock_merge, patch(
-        "b3_msh.core.mesh_step.pv.PolyData.save", Mock()
-    ) as mock_poly_save:
+    with (
+        patch("b3_msh.step.blade_mesh_step.pv.read", return_value=mock_mesh) as mock_read,
+        patch("b3_msh.step.blade_mesh_step.pv.MultiBlock") as mock_multiblock,
+        patch("pathlib.Path.exists", return_value=True),
+        patch("b3_msh.step.blade_mesh_step.pv.merge", return_value=mock_mesh) as mock_merge,
+        patch("b3_msh.step.blade_mesh_step.pv.PolyData.save", Mock()) as mock_poly_save,
+    ):
         mock_mb_instance = Mock()
         mock_multiblock.return_value = mock_mb_instance
         # Call _execute
@@ -90,10 +88,13 @@ def test_merge_meshes_with_missing_arrays():
     # Create mock meshes
     mesh1 = Mock()
     mesh1.n_cells = 5
-    mesh1.cell_data = {"panel_id": np.array([0, 0, 1, 1, -1], dtype=int), "other_field": np.array([1.0]*5, dtype=float)}
+    mesh1.cell_data = {
+        "panel_id": np.array([0, 0, 1, 1, -1], dtype=int),
+        "other_field": np.array([1.0] * 5, dtype=float),
+    }
     mesh1.point_data = {}
     mesh1.lines = np.array([])
-    mesh1.points = np.array([[0,0,0]]*5)
+    mesh1.points = np.array([[0, 0, 0]] * 5)
     mesh1.point_data_to_cell_data = Mock(return_value=mesh1)
 
     mesh2 = Mock()
@@ -101,7 +102,7 @@ def test_merge_meshes_with_missing_arrays():
     mesh2.cell_data = {"panel_id": np.array([0, 1, -10], dtype=int)}  # Missing 'other_field'
     mesh2.point_data = {}
     mesh2.lines = np.array([])
-    mesh2.points = np.array([[0,0,0]]*3)
+    mesh2.points = np.array([[0, 0, 0]] * 3)
     mesh2.point_data_to_cell_data = Mock(return_value=mesh2)
 
     sections = [Mock(), Mock()]  # Two sections
@@ -114,9 +115,11 @@ def test_merge_meshes_with_missing_arrays():
     merged_mesh.lines = np.array([])
     merged_mesh.cell_data = {}
     merged_mesh.point_data = {}
-    with patch("b3_msh.core.mesh_step.pv.merge", return_value=merged_mesh) as mock_merge, \
-         patch("b3_msh.core.mesh_step.pv.PolyData") as mock_poly_class, \
-         patch("pathlib.Path") as mock_path:
+    with (
+        patch("b3_msh.step.blade_mesh_step.pv.merge", return_value=merged_mesh) as mock_merge,
+        patch("b3_msh.step.blade_mesh_step.pv.PolyData") as mock_poly_class,
+        patch("pathlib.Path") as mock_path,
+    ):
         mock_poly = Mock()
         mock_poly_class.return_value = mock_poly
         mock_path_instance = Mock()
@@ -133,6 +136,3 @@ def test_merge_meshes_with_missing_arrays():
         assert np.array_equal(mesh2.cell_data["other_field"], np.zeros(3, dtype=float))
         # Check that merge was called
         mock_merge.assert_called_once()
-        # Check that poly.cell_data has both keys
-        # Since we set merged_mesh.cell_data = {}, but in code it's set from merged_mesh
-        # For test, assume it's set

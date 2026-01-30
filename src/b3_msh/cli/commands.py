@@ -69,9 +69,7 @@ def _process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config):
     logger.info("Processing sections")
     sections = []
     for z in z_sections:
-        af = B3MshStep.process_section_from_mesh(
-            mesh, z, chordwise_mesh, webs_config, logger
-        )
+        af = B3MshStep.process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
         sections.append(af)
     return sections
 
@@ -94,18 +92,14 @@ def _save_as_vtp(logger, sections, output_path):
     meshes = [af.to_pyvista() for af in sections]
     rmeshes = []
     for mesh in meshes:
-        rmeshes.append(
-            mesh.point_data_to_cell_data(progress_bar=False, pass_point_data=True)
-        )
+        rmeshes.append(mesh.point_data_to_cell_data(progress_bar=False, pass_point_data=True))
         for key in ["Normals", "z"]:
             if key in mesh.cell_data:
                 del mesh.cell_data[key]
     merged_mesh = pv.merge(rmeshes)
     for field in mesh.point_data.keys():
         if rmeshes and field in rmeshes[0].cell_data:
-            merged_values = np.concatenate(
-                [rmesh.cell_data[field] for rmesh in rmeshes]
-            )
+            merged_values = np.concatenate([rmesh.cell_data[field] for rmesh in rmeshes])
             merged_mesh.cell_data[field] = merged_values
     poly = pv.PolyData()
     poly.points = merged_mesh.points
@@ -142,9 +136,7 @@ def blade(config: str, output_format: str = "vtp", verbose: bool = False):
 
     z_sections = np.unique(mesh.points[:, 2])
     z_sections = np.sort(z_sections)
-    logger.info(
-        f"Found {len(z_sections)} z sections: {np.round(z_sections, 2).tolist()}"
-    )
+    logger.info(f"Found {len(z_sections)} z sections: {np.round(z_sections, 2).tolist()}")
 
     sections = _process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config)
 

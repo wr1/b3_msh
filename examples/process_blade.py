@@ -4,7 +4,7 @@ import numpy as np
 import pyvista as pv
 import yaml
 
-from b3_msh.core.mesh_step import B3MshStep
+from b3_msh.step.blade_mesh_step import B3MshStep
 from b3_msh.utils.logger import get_logger
 
 
@@ -30,9 +30,7 @@ def main():
         if z_spec["type"] == "plain":
             z_values.extend(z_spec["values"])
         elif z_spec["type"] == "linspace":
-            z_values.extend(
-                np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"])
-            )
+            z_values.extend(np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"]))
     logger.info(f"Found z sections: {np.round(z_values, 2).tolist()}")
     chordwise_mesh = mesh_config["chordwise"]
     webs_config = config["structure"]["webs"]
@@ -47,9 +45,7 @@ def main():
     sections = []
     for z in z_values:
         logger.info(f"Processing section at z={z}")
-        af = B3MshStep.process_section_from_mesh(
-            mesh, z, chordwise_mesh, webs_config, logger
-        )
+        af = B3MshStep.process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
         sections.append(af)
 
     logger.info("Creating new MultiBlock mesh")

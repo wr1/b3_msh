@@ -1,5 +1,4 @@
-"""Core functionality for Airfoil initialization,
-spline building, and transformations."""
+"""Airfoil initialization, spline building, and transformations."""
 
 import numpy as np
 from scipy.interpolate import PchipInterpolator
@@ -8,12 +7,9 @@ from ..utils.logger import get_logger
 
 
 class AirfoilCore:
-    """Core functionality for Airfoil initialization,
-    spline building, and transformations."""
+    """Airfoil initialization, spline building, and transformations."""
 
-    def __init__(
-        self, points, is_normalized=True, chord=1.0, position=(0, 0, 0), rotation=0
-    ):
+    def __init__(self, points, is_normalized=True, chord=1.0, position=(0, 0, 0), rotation=0):
         """Initialize an Airfoil."""
         self.logger = get_logger(self.__class__.__name__)
         self.logger.debug("Initializing AirfoilCore")
@@ -36,9 +32,7 @@ class AirfoilCore:
         self.current_points = None
         self._build_spline()
         self.remesh(self.current_t)  # Initial mesh
-        self.logger.debug(
-            f"AirfoilCore initialized with {len(self.original_points)} points"
-        )
+        self.logger.debug(f"AirfoilCore initialized with {len(self.original_points)} points")
 
     def _build_spline(self):
         """Build PCHIP splines for x, y, z from original points."""

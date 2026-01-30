@@ -6,9 +6,9 @@ from scipy.interpolate import PchipInterpolator, interp1d
 from statesman import Statesman
 from statesman.core.base import ManagedFile
 
-from .airfoil import Airfoil
-from .mesh_model import Config
-from .shear_web import ShearWeb
+from ..core.airfoil import Airfoil
+from ..core.mesh_model import Config
+from ..core.shear_web import ShearWeb
 
 
 class B3MshStep(Statesman):
@@ -28,9 +28,7 @@ class B3MshStep(Statesman):
             if z_spec.type == "plain":
                 mesh_z.extend(z_spec.values)
             elif z_spec.type == "linspace":
-                mesh_z.extend(
-                    np.linspace(z_spec.values[0], z_spec.values[1], z_spec.num)
-                )
+                mesh_z.extend(np.linspace(z_spec.values[0], z_spec.values[1], z_spec.num))
         self.config_model.mesh.z = sorted(set(mesh_z))
 
     def _load_and_validate_config(self):
@@ -44,8 +42,7 @@ class B3MshStep(Statesman):
         self.logger.info(f"Loading pre-processed mesh from {input_path}")
         if not input_path.exists():
             raise FileNotFoundError(
-                f"Input file {input_path} does not exist. "
-                "Ensure previous steps have run."
+                f"Input file {input_path} does not exist. Ensure previous steps have run."
             )
         mesh = pv.read(str(input_path))
         return mesh
@@ -70,9 +67,7 @@ class B3MshStep(Statesman):
         rmeshes = []
         # Translate point arrays to cell arrays before merging
         for mesh in meshes:
-            rmeshes.append(
-                mesh.point_data_to_cell_data(progress_bar=False, pass_point_data=True)
-            )
+            rmeshes.append(mesh.point_data_to_cell_data(progress_bar=False, pass_point_data=True))
             for key in ["Normals", "z"]:
                 if key in mesh.cell_data:
                     del mesh.cell_data[key]
@@ -94,9 +89,7 @@ class B3MshStep(Statesman):
         # Manually concatenate constant fields if present
         for field in mesh.point_data.keys():
             if rmeshes and field in rmeshes[0].cell_data:
-                merged_values = np.concatenate(
-                    [rmesh.cell_data[field] for rmesh in rmeshes]
-                )
+                merged_values = np.concatenate([rmesh.cell_data[field] for rmesh in rmeshes])
                 merged_mesh.cell_data[field] = merged_values
 
         # Convert to PolyData for VTP
@@ -132,9 +125,7 @@ class B3MshStep(Statesman):
         rel_span = rel_span_values[0]  # All points at same z have same rel_span
 
         # Create Airfoil from points
-        af = Airfoil(
-            points_2d, is_normalized=False, position=(0, 0, z)
-        )  # Position at z
+        af = Airfoil(points_2d, is_normalized=False, position=(0, 0, z))  # Position at z
         af.rel_span = rel_span
 
         # Add constant fields from input mesh
@@ -152,9 +143,7 @@ class B3MshStep(Statesman):
                     if web["type"] == "ribbon":
                         # Handle ribbon web
                         ref_web_name = web["reference_web"]
-                        ref_web = next(
-                            w for w in webs_config if w["name"] == ref_web_name
-                        )
+                        ref_web = next(w for w in webs_config if w["name"] == ref_web_name)
                         z_vals = np.array([p[0] for p in web["offsets"]])
                         offset_vals = np.array([p[1] for p in web["offsets"]])
                         sort_idx = np.argsort(z_vals)
@@ -175,9 +164,7 @@ class B3MshStep(Statesman):
                             logger.error(
                                 f"Unsupported interp_method '{interp_method}' for ribbon web {web['name']}"
                             )
-                            raise ValueError(
-                                f"Unsupported interp_method: {interp_method}"
-                            )
+                            raise ValueError(f"Unsupported interp_method: {interp_method}")
                         offset = float(offset_interp(z))
                         ref_origin = np.array(ref_web["origin"])
                         ref_normal = np.array(ref_web["orientation"])

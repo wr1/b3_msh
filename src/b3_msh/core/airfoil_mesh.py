@@ -1,5 +1,4 @@
-"""Meshing functionality for Airfoil, including
-hard points, panels, and remeshing."""
+"""Meshing functionality for Airfoil, including hard points, panels, and remeshing."""
 
 import numpy as np
 
@@ -7,8 +6,7 @@ from ..utils.logger import get_logger
 
 
 class AirfoilMesh:
-    """Meshing functionality for Airfoil, including
-    hard points, panels, and remeshing."""
+    """Meshing functionality for Airfoil, including hard points, panels, and remeshing."""
 
     def __init__(self):
         self.logger = get_logger(self.__class__.__name__)
@@ -45,9 +43,7 @@ class AirfoilMesh:
         shear_web.name = shear_web.definition.get("name", f"web{len(self.shear_webs)}")
         self.shear_webs.append(shear_web)
         self.shear_web_refinements[shear_web] = refinement_factor
-        self.shear_web_n_elements[shear_web] = (
-            n_elements if n_elements is not None else 1
-        )
+        self.shear_web_n_elements[shear_web] = n_elements if n_elements is not None else 1
         t1, t2 = shear_web.compute_intersections(self)
         self.add_hard_point(t1, name=f"{shear_web.name}_hp0")
         self.add_hard_point(t2, name=f"{shear_web.name}_hp1")

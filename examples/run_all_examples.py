@@ -10,6 +10,7 @@ examples = [
     "example_usage.py",
     "multi_airfoil_example.py",
     "explicit_n_elements_example.py",
+    "run_blade_with_ribbon.py",
 ]
 
 # Run from the project root directory
@@ -21,4 +22,3 @@ for ex in examples:
     result = subprocess.run([sys.executable, ex_path])
     if result.returncode != 0:
         sys.exit(1)
-
