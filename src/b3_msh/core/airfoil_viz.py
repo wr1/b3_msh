@@ -70,10 +70,13 @@ class AirfoilViz:
             start_idx = hp_indices[p_idx]
             end_idx = hp_indices[p_idx + 1]
             cell_data[start_idx:end_idx] = p_idx
-        # Shear webs have panel_id = - (i + 1) for i in range(len(self.shear_webs))
+        # Shear webs have panel_id = - (i + 1) for i in range(len(self.shear_webs)), except trailing edge which is -10
         cell_start = n_airfoil_cells
         for i, sw in enumerate(self.shear_webs):
-            panel_id_web = -(i + 1)
+            if sw.definition["type"] == "trailing_edge":
+                panel_id_web = -10
+            else:
+                panel_id_web = -(i + 1)
             n_cells_web = self.shear_web_n_elements[sw]
             cell_data[cell_start : cell_start + n_cells_web] = panel_id_web
             cell_start += n_cells_web

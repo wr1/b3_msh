@@ -48,13 +48,6 @@ Shear webs in 2d can be defined in 3D
 - The shear web can be a 3D plane (same as 2D plane), by adding a non-0 nz, the web location in 2d changes as it runs down the blade, this is intended and allows angling of webs 
 - New definition, class *ribbon*, the ribbon web is defined as a variable offset in the normal direction from an existing web, so it has a *reference web*, and a series of key points [[z,offset]...] defining the offset of the ribbon web from the reference web for z locations, the offset can be interpolated for intermediate sections using pchip or interp
 
-
-
-
-
-
-
-
 = tech 
 - scipy pchip for spline interpolation
 - numpy, prioritize vectorized operations

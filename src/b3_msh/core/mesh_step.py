@@ -76,6 +76,19 @@ class B3MshStep(Statesman):
             for key in ["Normals", "z"]:
                 if key in mesh.cell_data:
                     del mesh.cell_data[key]
+        # Collect all unique cell_data keys across all meshes
+        all_keys = set()
+        dtype_dict = {}
+        for mesh in rmeshes:
+            for key in mesh.cell_data.keys():
+                all_keys.add(key)
+                if key not in dtype_dict:
+                    dtype_dict[key] = mesh.cell_data[key].dtype
+        # For each mesh, add missing keys with zero arrays
+        for mesh in rmeshes:
+            for key in all_keys:
+                if key not in mesh.cell_data:
+                    mesh.cell_data[key] = np.zeros(mesh.n_cells, dtype=dtype_dict[key])
         # Merge into single UnstructuredGrid
         merged_mesh = pv.merge(rmeshes)
         # Manually concatenate constant fields if present

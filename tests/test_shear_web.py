@@ -85,3 +85,28 @@ def test_shear_web_named():
     mesh = af.to_pyvista()
     assert "abs_dist_test_web_hp0" in mesh.point_data
     assert "abs_dist_test_web_hp1" in mesh.point_data
+
+
+def test_trailing_edge_panel_id():
+    """Test that trailing edge shear web has panel_id = -10."""
+    points = np.array([[0, 0], [0.5, 0.1], [1, 0]])
+    af = Airfoil(points)
+    # Add a regular shear web first
+    sw_regular = ShearWeb({"type": "plane", "origin": (0.5, 0.05, 0), "normal": (0, 1, 0)})
+    af.add_shear_web(sw_regular, n_elements=3)
+    # Add trailing edge
+    sw_te = ShearWeb({"type": "trailing_edge"})
+    af.add_shear_web(sw_te, n_elements=5)
+    af.remesh(total_n_points=50)
+    mesh = af.to_pyvista()
+    panel_ids = mesh.cell_data["panel_id"]
+    # Trailing edge should have -10
+    assert -10 in panel_ids
+    # Check that the cells for trailing edge have -10
+    n_airfoil_cells = len(af.current_points) - 1
+    cell_start = n_airfoil_cells
+    for i, sw in enumerate(af.shear_webs):
+        n_cells_web = af.shear_web_n_elements[sw]
+        if sw.definition["type"] == "trailing_edge":
+            assert np.all(panel_ids[cell_start : cell_start + n_cells_web] == -10)
+        cell_start += n_cells_web
