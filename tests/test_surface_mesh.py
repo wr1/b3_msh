@@ -1,5 +1,3 @@
-import os
-import tempfile
 from unittest.mock import Mock, patch
 
 import numpy as np
@@ -93,10 +91,23 @@ def test_surface_step_no_mesh3d():
     step = object.__new__(B3MshSurfaceStep)
     step.config = {
         "workdir": "/tmp/test",
-        "geometry": {"planform": {"npchord": 10, "dx": [], "dy": [], "z": [], "chord": [], "thickness": [], "twist": []}},
+        "geometry": {
+            "planform": {
+                "npchord": 10,
+                "dx": [],
+                "dy": [],
+                "z": [],
+                "chord": [],
+                "thickness": [],
+                "twist": [],
+            }
+        },
         "airfoils": [],
         "structure": {"webs": []},
-        "mesh": {"z": [{"type": "plain", "values": [0.0]}], "chordwise": {"default": {"n_elem": 10}}},
+        "mesh": {
+            "z": [{"type": "plain", "values": [0.0]}],
+            "chordwise": {"default": {"n_elem": 10}},
+        },
         # No mesh3d
     }
     with pytest.raises(ValueError, match="mesh3d section required"):
