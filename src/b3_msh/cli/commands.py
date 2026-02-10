@@ -148,3 +148,96 @@ def blade(config: str, output_format: str = "vtp", verbose: bool = False):
         _save_as_vtp(logger, sections, output_path)
 
     logger.info(f"Saved remeshed blade mesh to {output_path}")
+
+
+def surface(config: str, verbose: bool = False):
+    """Process surface mesh from YAML config."""
+    logger = get_logger("CLI")
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+        logger.info("Verbose logging enabled")
+    else:
+        logger.setLevel(logging.INFO)
+    logger.info(f"Processing surface mesh from {config}")
+
+    config_data = _load_config(config)
+    config_dir = os.path.dirname(os.path.abspath(config))
+    workdir = os.path.join(config_dir, config_data["workdir"])
+    mesh3d_config = config_data.get("mesh3d")
+    if not mesh3d_config:
+        logger.error("mesh3d section required for surface meshing")
+        return
+    chordwise_mesh = mesh3d_config["chordwise"]
+    webs_config = config_data["structure"]["webs"]
+
+    input_path = os.path.join(workdir, "b3_geo", "lm1_mesh.vtp")
+    logger.info(f"Loading pre-processed mesh from {input_path}")
+    mesh = pv.read(input_path)
+
+    z_sections = np.unique(mesh.points[:, 2])
+    z_sections = np.sort(z_sections)
+    logger.info(f"Found {len(z_sections)} z sections: {np.round(z_sections, 2).tolist()}")
+
+    sections = _process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config)
+
+    # Create surface mesh
+    all_points = []
+    all_faces = []
+    point_offset = 0
+
+    section_data = []
+    for af in sections:
+        pv_mesh = af.to_pyvista()
+        points = pv_mesh.points
+        lines = pv_mesh.lines.reshape(-1, 3)[:, 1:]
+        panel_ids = pv_mesh.cell_data["panel_id"]
+        section_data.append(
+            {"points": points, "lines": lines, "panel_ids": panel_ids, "n_points": len(points)}
+        )
+
+    for i in range(len(sections) - 1):
+        sec1 = section_data[i]
+        sec2 = section_data[i + 1]
+
+        # Airfoil panels
+        airfoil_lines1 = sec1["lines"][sec1["panel_ids"] >= 0]
+        airfoil_lines2 = sec2["lines"][sec2["panel_ids"] >= 0]
+
+        if len(airfoil_lines1) != len(airfoil_lines2):
+            logger.error(f"Inconsistent airfoil elements between sections {i} and {i + 1}")
+            continue
+
+        for j in range(len(airfoil_lines1)):
+            p1 = airfoil_lines1[j][0] + point_offset
+            p2 = airfoil_lines1[j][1] + point_offset
+            p3 = airfoil_lines2[j][1] + point_offset + sec1["n_points"]
+            p4 = airfoil_lines2[j][0] + point_offset + sec1["n_points"]
+            all_faces.append([4, p1, p2, p3, p4])
+
+        # Shear webs
+        unique_panels = np.unique(sec1["panel_ids"])
+        for panel_id in unique_panels:
+            if panel_id < 0:
+                lines1 = sec1["lines"][sec1["panel_ids"] == panel_id]
+                lines2 = sec2["lines"][sec2["panel_ids"] == panel_id]
+                if len(lines1) != len(lines2):
+                    logger.warning(f"Inconsistent shear web elements for panel {panel_id}")
+                    continue
+                for j in range(len(lines1)):
+                    p1 = lines1[j][0] + point_offset
+                    p2 = lines1[j][1] + point_offset
+                    p3 = lines2[j][1] + point_offset + sec1["n_points"]
+                    p4 = lines2[j][0] + point_offset + sec1["n_points"]
+                    all_faces.append([4, p1, p2, p3, p4])
+
+        all_points.extend(sec1["points"])
+        point_offset += sec1["n_points"]
+
+    all_points.extend(section_data[-1]["points"])
+
+    surface_mesh = pv.PolyData(np.array(all_points), faces=np.array(all_faces))
+    output_path = os.path.join(workdir, "b3_msh", "lm2_surface_mesh.vtp")
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    logger.info(f"Saving surface mesh to {output_path}")
+    surface_mesh.save(output_path)
+    logger.info(f"Saved surface mesh to {output_path}")

@@ -83,16 +83,8 @@ class AirfoilMesh:
         elif t_distribution is not None:
             t_vals = np.array(t_distribution)
         elif total_n_points is not None:
-            panels = self.get_panels()
-            total_segments = total_n_points - 1
-            t_vals = []
-            for t_start, t_end in panels:
-                length = t_end - t_start
-                segments = round(length * total_segments)
-                n_points_panel = segments + 1
-                t_panel = np.linspace(t_start, t_end, n_points_panel)
-                t_vals.extend(t_panel)
-            t_vals = np.array(t_vals)
+            n_points_airfoil = total_n_points - len(self.hard_points)
+            t_vals = np.linspace(0, 1, n_points_airfoil)
         elif element_length is not None:
             # Approximate based on arc length
             total_length = self._arc_length(0, 1)

@@ -1,6 +1,8 @@
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
+
+from .mesh3d_model import Mesh3D
 
 
 class ZSpec(BaseModel):
@@ -53,9 +55,10 @@ class Web(BaseModel):
     n_elem: Optional[int] = None
     interp_method: Literal["pchip", "linear"] = "pchip"
 
-    @validator("normal", pre=True, always=True)
-    def normal_or_orientation(cls, v, values):
-        return v or values.get("orientation")
+    @field_validator("normal", mode="before")
+    @classmethod
+    def normal_or_orientation(cls, v, info):
+        return v or info.data.get("orientation")
 
 
 class Structure(BaseModel):
@@ -86,6 +89,7 @@ class Config(BaseModel):
     airfoils: list[AirfoilItem]
     structure: Structure
     mesh: Mesh
+    mesh3d: Optional[Mesh3D] = None
 
 
 # Legacy compatibility (for existing code)

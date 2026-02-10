@@ -2,7 +2,7 @@
 
 from treeparse import argument, cli, command, option
 
-from .commands import blade, plot, remesh
+from .commands import blade, plot, remesh, surface
 
 app = cli(
     name="b3_msh",
@@ -128,6 +128,30 @@ blade_cmd = command(
     ],
 )
 app.commands.append(blade_cmd)
+
+surface_cmd = command(
+    name="surface",
+    help="Process surface mesh from YAML config.",
+    callback=surface,
+    arguments=[
+        argument(
+            name="config",
+            arg_type=str,
+            help="Path to YAML config file.",
+            sort_key=0,
+        ),
+    ],
+    options=[
+        option(
+            flags=["--verbose", "-v"],
+            arg_type=bool,
+            default=False,
+            help="Enable verbose logging.",
+            sort_key=0,
+        ),
+    ],
+)
+app.commands.append(surface_cmd)
 
 
 def main():

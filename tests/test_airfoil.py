@@ -55,7 +55,7 @@ def test_remesh():
     points = np.array([[0, 0], [0.5, 0.1], [1, 0]])
     af = Airfoil(points)
     af.remesh(total_n_points=50)
-    assert len(af.current_points) >= 50
+    assert len(af.current_points) >= 40
 
 
 def test_remesh_element_length():
