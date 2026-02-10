@@ -11,6 +11,10 @@ examples = [
     "examples/multi_airfoil_example.py",
     "examples/explicit_n_elements_example.py",
     "examples/run_blade_with_ribbon.py",
+    "examples/run_surface_example.py",
+    "examples/run_blade_example.py",
+    "examples/debug_3d_web_intersection.py",
+    "examples/process_surface.py",
 ]
 
 

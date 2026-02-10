@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 # Run the surface command with the config
-config_path = "examples/blade_test_surface.yml"
+config_path = "examples/blade_test_ribbon.yml"
 if not os.path.exists(config_path):
     sys.exit(1)
 
