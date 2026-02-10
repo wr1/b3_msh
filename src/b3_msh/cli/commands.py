@@ -1,5 +1,7 @@
 import logging
 
+import numpy as np
+
 from ..core.airfoil import Airfoil
 from ..core.processing import process_blade_config, process_surface_config
 from ..utils.logger import get_logger
@@ -48,7 +50,6 @@ def remesh(
     logger.info(f"Remeshing airfoil from {file}")
     af = Airfoil.from_xfoil(file)
     af.remesh(n_points=n_points)
-    import numpy as np
     np.savetxt(output, af.current_points[:, :2], header="x y", comments="")
     logger.info(f"Remeshed points saved to {output}")
     logger.debug("Remesh command completed")
