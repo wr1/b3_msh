@@ -6,7 +6,8 @@ import pyvista as pv
 import yaml
 
 from ..core.airfoil import Airfoil
-from ..core.mesh_step import B3MshStep
+from ..step.blade_mesh_step import B3MshStep
+from ..step.surface_mesh_step import B3MshSurfaceStep
 from ..utils.logger import get_logger
 
 
@@ -69,7 +70,9 @@ def _process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config):
     logger.info("Processing sections")
     sections = []
     for z in z_sections:
-        af = B3MshStep.process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
+        af = B3MshStep.process_section_from_mesh(
+            mesh, z, chordwise_mesh, webs_config, logger
+        )
         sections.append(af)
     return sections
 
@@ -80,6 +83,7 @@ def _save_as_vtm(logger, sections, output_path):
     new_multi_block = pv.MultiBlock()
     for i, af in enumerate(sections):
         mesh_out = af.to_pyvista()
+        logger.info(f"Section {i} arrays: point_data {list(mesh_out.point_data.keys())}, cell_data {list(mesh_out.cell_data.keys())}")
         new_multi_block.append(mesh_out, f"Section_{i}")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     logger.info(f"Saving mesh to {output_path}")
@@ -90,16 +94,35 @@ def _save_as_vtp(logger, sections, output_path):
     """Save as VTP."""
     logger.info("Merging meshes into single PolyData")
     meshes = [af.to_pyvista() for af in sections]
+    for i, mesh in enumerate(meshes):
+        logger.info(f"Section {i} arrays: point_data {list(mesh.point_data.keys())}, cell_data {list(mesh.cell_data.keys())}")
     rmeshes = []
     for mesh in meshes:
-        rmeshes.append(mesh.point_data_to_cell_data(progress_bar=False, pass_point_data=True))
+        rmeshes.append(
+            mesh.point_data_to_cell_data(progress_bar=False, pass_point_data=True)
+        )
         for key in ["Normals", "z"]:
             if key in mesh.cell_data:
                 del mesh.cell_data[key]
+    # Collect all unique cell_data keys across all meshes
+    all_keys = set()
+    dtype_dict = {}
+    for mesh in rmeshes:
+        for key in mesh.cell_data.keys():
+            all_keys.add(key)
+            if key not in dtype_dict:
+                dtype_dict[key] = mesh.cell_data[key].dtype
+    # For each mesh, add missing keys with zero arrays
+    for mesh in rmeshes:
+        for key in all_keys:
+            if key not in mesh.cell_data:
+                mesh.cell_data[key] = np.zeros(mesh.n_cells, dtype=dtype_dict[key])
     merged_mesh = pv.merge(rmeshes)
     for field in mesh.point_data.keys():
         if rmeshes and field in rmeshes[0].cell_data:
-            merged_values = np.concatenate([rmesh.cell_data[field] for rmesh in rmeshes])
+            merged_values = np.concatenate(
+                [rmesh.cell_data[field] for rmesh in rmeshes]
+            )
             merged_mesh.cell_data[field] = merged_values
     poly = pv.PolyData()
     poly.points = merged_mesh.points
@@ -136,7 +159,9 @@ def blade(config: str, output_format: str = "vtp", verbose: bool = False):
 
     z_sections = np.unique(mesh.points[:, 2])
     z_sections = np.sort(z_sections)
-    logger.info(f"Found {len(z_sections)} z sections: {np.round(z_sections, 2).tolist()}")
+    logger.info(
+        f"Found {len(z_sections)} z sections: {np.round(z_sections, 2).tolist()}"
+    )
 
     sections = _process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config)
 
@@ -176,7 +201,9 @@ def surface(config: str, verbose: bool = False):
 
     z_sections = np.unique(mesh.points[:, 2])
     z_sections = np.sort(z_sections)
-    logger.info(f"Found {len(z_sections)} z sections: {np.round(z_sections, 2).tolist()}")
+    logger.info(
+        f"Found {len(z_sections)} z sections: {np.round(z_sections, 2).tolist()}"
+    )
 
     sections = _process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config)
 
@@ -191,9 +218,12 @@ def surface(config: str, verbose: bool = False):
         points = pv_mesh.points
         lines = pv_mesh.lines.reshape(-1, 3)[:, 1:]
         panel_ids = pv_mesh.cell_data["panel_id"]
-        section_data.append(
-            {"points": points, "lines": lines, "panel_ids": panel_ids, "n_points": len(points)}
-        )
+        section_data.append({
+            "points": points,
+            "lines": lines,
+            "panel_ids": panel_ids,
+            "n_points": len(points)
+        })
 
     for i in range(len(sections) - 1):
         sec1 = section_data[i]
@@ -204,7 +234,7 @@ def surface(config: str, verbose: bool = False):
         airfoil_lines2 = sec2["lines"][sec2["panel_ids"] >= 0]
 
         if len(airfoil_lines1) != len(airfoil_lines2):
-            logger.error(f"Inconsistent airfoil elements between sections {i} and {i + 1}")
+            logger.error(f"Inconsistent airfoil elements between sections {i} and {i+1}")
             continue
 
         for j in range(len(airfoil_lines1)):
