@@ -8,6 +8,7 @@ import pyvista as pv
 import yaml
 
 from ..step.blade_mesh_step import B3MshStep
+from ..step.surface_mesh_step import B3MshSurfaceStep
 from ..utils.logger import get_logger
 
 
@@ -23,6 +24,16 @@ def _process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config):
     sections = []
     for z in z_sections:
         af = B3MshStep.process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
+        sections.append(af)
+    return sections
+
+
+def _process_sections_surface(logger, mesh, z_sections, chordwise_mesh, webs_config):
+    """Process sections for surface meshing."""
+    logger.info("Processing sections for surface mesh")
+    sections = []
+    for z in z_sections:
+        af = B3MshSurfaceStep.process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
         sections.append(af)
     return sections
 
@@ -141,7 +152,7 @@ def process_surface_config(config_path, verbose=False):
     chordwise_mesh = mesh3d_config["chordwise"]
     webs_config = config_data["structure"]["webs"]
 
-    input_path = os.path.join(workdir, "b3_geo", "lm1_mesh.vtp")
+    input_path = os.path.join(workdir, "b3_geo", "lm1_mesh3d.vtp")
     logger.info(f"Loading pre-processed mesh from {input_path}")
     mesh = pv.read(input_path)
 
@@ -149,7 +160,7 @@ def process_surface_config(config_path, verbose=False):
     z_sections = np.sort(z_sections)
     logger.info(f"Found {len(z_sections)} z sections: {np.round(z_sections, 2).tolist()}")
 
-    sections = _process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config)
+    sections = _process_sections_surface(logger, mesh, z_sections, chordwise_mesh, webs_config)
 
     # Create surface mesh
     all_points = []

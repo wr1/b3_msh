@@ -15,7 +15,7 @@ class B3MshSurfaceStep(Statesman):
 
     workdir_key = "workdir"
     input_files = [
-        ManagedFile(name="b3_geo/lm1_mesh.vtp", non_empty=True),
+        ManagedFile(name="b3_geo/lm1_mesh3d.vtp", non_empty=True),
     ]
     output_files = ["b3_msh/lm2_surface_mesh.vtp"]
     dependent_sections = ["geometry", "airfoils", "structure", "mesh3d"]
@@ -264,7 +264,7 @@ class B3MshSurfaceStep(Statesman):
         chordwise_mesh = config_model.mesh3d.chordwise
         webs_config = config_model.structure.webs
 
-        input_path = workdir / "b3_geo" / "lm1_mesh.vtp"
+        input_path = workdir / "b3_geo" / "lm1_mesh3d.vtp"
         mesh = self._load_mesh(input_path)
 
         sections = self._process_sections(mesh, z_sections, chordwise_mesh, webs_config)

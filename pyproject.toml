@@ -78,14 +78,3 @@ warn_unused_configs = true
 [[tool.mypy.overrides]]
 module = "pyvista.*"
 disable_error_code = ["attr-defined", "return-value"]
-
-[tool.coverage.run]
-source = ["src", "tests"]
-omit = [
-    "*/__init__.py",
-    "src/b3_msh/cli/*",
-]
-
-[tool.coverage.report]
-show_missing = true
-skip_covered = false
