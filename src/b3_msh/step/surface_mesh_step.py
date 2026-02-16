@@ -157,7 +157,10 @@ class B3MshSurfaceStep(Statesman):
     def process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger):
         """Process a single section mesh by remeshing with uniform t distribution."""
         # Extract points at this z
-        mask = np.isclose(mesh.points[:, 2], z)
+        mask = np.isclose(mesh.points[:, 2], z, atol=1e-2)
+        if mask.sum() == 0:
+            logger.warning(f"No points found at z={z}, skipping section")
+            return None
 
         section_points = mesh.points[mask]
         # Sort by associated t pointdata
