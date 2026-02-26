@@ -33,7 +33,9 @@ def _process_sections_surface(logger, mesh, z_sections, chordwise_mesh, webs_con
     logger.info("Processing sections for surface mesh")
     sections = []
     for z in z_sections:
-        af = B3MshSurfaceStep.process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
+        af = B3MshSurfaceStep.process_section_from_mesh(
+            mesh, z, chordwise_mesh, webs_config, logger
+        )
         sections.append(af)
     return sections
 
