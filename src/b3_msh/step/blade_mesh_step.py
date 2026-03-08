@@ -2,17 +2,17 @@ from pathlib import Path
 
 import numpy as np
 import pyvista as pv
+from b3_state import b3_state
+from b3_state.core.base import ManagedFile
 from scipy.interpolate import PchipInterpolator, interp1d
-from statesman import Statesman
-from statesman.core.base import ManagedFile
 
 from ..core.airfoil import Airfoil
 from ..core.mesh_model import Config
 from ..core.shear_web import ShearWeb
 
 
-class B3MshStep(Statesman):
-    """Statesman step for running b3_msh blade processing."""
+class B3MshStep(b3_state):
+    """b3_state step for running b3_msh blade processing."""
 
     workdir_key = "workdir"
     input_files = [
