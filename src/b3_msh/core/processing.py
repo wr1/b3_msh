@@ -176,7 +176,13 @@ def process_surface_config(config_path, verbose=False):
         lines = pv_mesh.lines.reshape(-1, 3)[:, 1:]
         panel_ids = pv_mesh.cell_data["panel_id"]
         section_data.append(
-            {"points": points, "lines": lines, "panel_ids": panel_ids, "n_points": len(points)}
+            {
+                "points": points,
+                "lines": lines,
+                "panel_ids": panel_ids,
+                "n_points": len(points),
+                "point_data": {k: v.copy() for k, v in pv_mesh.point_data.items()},
+            }
         )
 
     for i in range(len(sections) - 1):
@@ -219,9 +225,36 @@ def process_surface_config(config_path, verbose=False):
 
     all_points.extend(section_data[-1]["points"])
 
+    # Propagate point data from sections (Phase 1)
+    all_point_data_keys = set()
+    point_dtype = {}
+    for sec_data in section_data:
+        for k in sec_data["point_data"]:
+            all_point_data_keys.add(k)
+            if k not in point_dtype:
+                point_dtype[k] = sec_data["point_data"][k].dtype
+
+    point_data_global = {}
+    for key in all_point_data_keys:
+        arrays = []
+        for sec_data in section_data:
+            if key in sec_data["point_data"]:
+                arrays.append(sec_data["point_data"][key])
+            else:
+                n_pts = sec_data["n_points"]
+                dtype_k = point_dtype[key]
+                pad = np.full(n_pts, np.nan, dtype=dtype_k)
+                arrays.append(pad)
+        point_data_global[key] = np.concatenate(arrays)
+
     surface_mesh = pv.PolyData(np.array(all_points), faces=np.array(all_faces))
+    for key, arr in point_data_global.items():
+        surface_mesh.point_data[key] = arr
+
     output_path = os.path.join(workdir, "b3_msh", "lm2_surface_mesh.vtp")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    logger.info(f"Surface mesh created with {surface_mesh.n_points} points, {surface_mesh.n_cells} cells")
+    logger.info(f"Point data keys: {list(surface_mesh.point_data.keys())}")
     logger.info(f"Saving surface mesh to {output_path}")
     surface_mesh.save(output_path)
     logger.info(f"Saved surface mesh to {output_path}")

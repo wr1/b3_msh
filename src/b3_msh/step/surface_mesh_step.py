@@ -92,10 +92,11 @@ class B3MshSurfaceStep(b3_state):
                     "n_points": len(points),
                     "n_airfoil_lines": len(airfoil_lines),
                     "shear_web_lines": shear_web_lines,
+                    "point_data": {k: v.copy() for k, v in pv_mesh.point_data.items()},
                 }
             )
             self.logger.info(
-                f"Section {i} (z={af.position[2]:.2f}): {len(points)} points, {len(airfoil_lines)} airfoil lines, shear webs: { {k: len(v) for k, v in shear_web_lines.items()} }"
+                f"Section {i} (z={af.position[2]:.2f}): {len(points)} points, {len(airfoil_lines)} airfoil lines, shear webs: {{{'k: len(v) for k, v in shear_web_lines.items()}}}"
             )
 
         # Assume sections have consistent line elements for panel_id >= 0
@@ -144,8 +145,35 @@ class B3MshSurfaceStep(b3_state):
         # Add last section points
         all_points.extend(section_data[-1]["points"])
 
+        # Propagate point data from sections (Phase 1)
+        all_point_data_keys = set()
+        point_dtype = {}
+        for sec_data in section_data:
+            for k in sec_data["point_data"]:
+                all_point_data_keys.add(k)
+                if k not in point_dtype:
+                    point_dtype[k] = sec_data["point_data"][k].dtype
+
+        point_data_global = {}
+        for key in all_point_data_keys:
+            arrays = []
+            for sec_data in section_data:
+                if key in sec_data["point_data"]:
+                    arrays.append(sec_data["point_data"][key])
+                else:
+                    n_pts = sec_data["n_points"]
+                    dtype_k = point_dtype[key]
+                    pad = np.full(n_pts, np.nan, dtype=dtype_k)
+                    arrays.append(pad)
+            point_data_global[key] = np.concatenate(arrays)
+
         # Create PyVista mesh
         surface_mesh = pv.PolyData(np.array(all_points), faces=np.array(all_faces))
+        for key, arr in point_data_global.items():
+            surface_mesh.point_data[key] = arr
+
+        self.logger.info(f"Surface mesh created with {surface_mesh.n_points} points, {surface_mesh.n_cells} cells")
+        self.logger.info(f"Point data keys: {list(surface_mesh.point_data.keys())}")
 
         # Save
         output_path.parent.mkdir(parents=True, exist_ok=True)
