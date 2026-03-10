@@ -96,7 +96,7 @@ class B3MshSurfaceStep(b3_state):
                 }
             )
             self.logger.info(
-                f"Section {i} (z={af.position[2]:.2f}): {len(points)} points, {len(airfoil_lines)} airfoil lines, shear webs: {{{'k: len(v) for k, v in shear_web_lines.items()}}}"
+                f"Section {i} (z={af.position[2]:.2f}): {len(points)} points, {len(airfoil_lines)} airfoil lines, shear webs: {{{k: len(v) for k, v in shear_web_lines.items()}}}"
             )
 
         # Assume sections have consistent line elements for panel_id >= 0
@@ -154,12 +154,42 @@ class B3MshSurfaceStep(b3_state):
                 if k not in point_dtype:
                     point_dtype[k] = sec_data["point_data"][k].dtype
 
+        # Add new coordinate keys
+        new_keys = ["dist_from_te", "chordwise_coord", "spanwise_coord"]
+        for key in new_keys:
+            all_point_data_keys.add(key)
+            point_dtype[key] = float
+
+        # Compute global min_z, max_z for spanwise_coord
+        all_z = [af.position[2] for af in sections]
+        min_z = min(all_z)
+        max_z = max(all_z)
+        span_range = max_z - min_z if max_z > min_z else 1.0
+
         point_data_global = {}
         for key in all_point_data_keys:
             arrays = []
-            for sec_data in section_data:
+            for i, sec_data in enumerate(section_data):
+                af = sections[i]
                 if key in sec_data["point_data"]:
                     arrays.append(sec_data["point_data"][key])
+                elif key == "dist_from_te":
+                    # Compute distance from trailing edge (t=1)
+                    diffs = np.diff(af.current_points, axis=0)
+                    arc_lengths = np.sqrt(np.sum(diffs**2, axis=1))
+                    cum_arc = np.cumsum(arc_lengths)
+                    cum_arc = np.insert(cum_arc, 0, 0)
+                    total_arc = cum_arc[-1]
+                    dist_from_te = total_arc - cum_arc
+                    arrays.append(dist_from_te)
+                elif key == "chordwise_coord":
+                    # Parametric t, assuming t=0 at LE, t=1 at TE
+                    arrays.append(af.current_t)
+                elif key == "spanwise_coord":
+                    # Normalized span position
+                    z_val = af.position[2]
+                    spanwise = (z_val - min_z) / span_range
+                    arrays.append(np.full(sec_data["n_points"], spanwise))
                 else:
                     n_pts = sec_data["n_points"]
                     dtype_k = point_dtype[key]
