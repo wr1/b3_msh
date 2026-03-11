@@ -1,103 +1,121 @@
 #set page(margin: 1in)
 #set text(font: "New Computer Modern", size: 12pt)
 
-= b3_msh
+= b3_msh – Architecture & Development Guide
 
-// Author: wr1 <8971152+wr1@users.noreply.github.com>
-// Consolidated & updated design brief (March 2026)
-// Merges original functionality with architectural decisions for 2D/3D separation
+// Author: wr1 + LLM Maintainers
+// Date: March 2026
+// Status: Authoritative reference for all future development
 
-b3_msh is a Python library for handling line meshes representing airfoils (and full blade sections) with internal structure such as shear webs. It supports both 2D airfoil processing and 3D surface meshing within a single, logically cohesive codebase.
+b3_msh is a focused Python library for creating high-quality line and surface meshes of airfoils and wind turbine blades, with full support for internal structures (shear webs).
 
-The base of every airfoil is an XFOIL-style point list (x-y and optional z coordinates). Internally, this list is interpolated with a spline using a parametric coordinate #emph[t ∈ [0, 1]] (LE = 0, TE = 1). All subsequent operations (remeshing, hard-point insertion, shear-web definition) operate on this spline to prevent drift.
+The library deliberately maintains a clean separation between shared meshing logic, multiline (2D multi-section blade line meshes), and surface (3D quad mesh) workflows.
 
-== Architectural Overview
+== Canonical Project Structure
 
-b3_msh is deliberately structured as a unified meshing library while maintaining strict separation of concerns between 2D and 3D workflows. This prevents feature creep, simplifies testing, and keeps the codebase maintainable.
+All code *must* follow this exact layout (valid Python package names only):
 
-- *2D Meshing (Airfoil/Blade Section Processing)*:  
-  Handled by the `Airfoil` family of classes (in `core/`) and the `B3MshStep` pipeline (in `step/blade_mesh_step.py`).  
-  Focus: individual airfoil remeshing, hard points, panels, shear webs, and line-mesh generation in the local x-y plane.  
-  Output: line meshes (VTU/VTP) suitable for 2D analysis or as input to 3D steps.
+```plain
+src/b3_msh/
+├── cli/                    # Command-line interface (one function per file)
+├── meshing/                # Shared core meshing logic (single source of truth)
+│   ├── airfoil/            # AirfoilCore, Mesh, Plot, Viz, remeshing
+│   ├── webs/               # ShearWeb, RibbonWeb, intersection logic
+│   ├── sections.py         # Shared section extraction
+│   └── __init__.py
+├── multiline/              # Multiline (2D multi-section blade line meshes)
+│   ├── processing/         # Blade-specific config & merging
+│   └── step/               # B3MshLineStep
+├── surface/                # Surface (3D quad mesh)
+│   ├── processing/         # Surface-specific face building & data propagation
+│   └── step/               # B3MshSurfaceStep
+├── step/                   # Public façade for b3_state
+│   ├── __init__.py         # re-exports LineStep and SurfaceStep
+│   ├── line.py
+│   └── surface.py
+├── utils/                  # Logger, parallel processing, helpers
+└── __init__.py
+```
 
-- *3D Meshing (Surface Processing)*:  
-  Handled by the dedicated `B3MshSurfaceStep` (in `step/surface_mesh_step.py`).  
-  Focus: stacking multiple airfoil sections, propagating chordwise/spanwise coordinates (TE distance, chordwise arc length, spanwise position, etc.), and generating full 3D surface meshes.  
-  Operates in true 3D space and builds directly on 2D `Airfoil` objects.
+This structure is mandatory. Do not create new top-level directories without first updating this document.
 
-- *Shared Core*:  
-  `AirfoilCore`, `ShearWeb`, `RibbonWeb`, and utilities in `core/` and `utils/`.  
-  Shared components are minimal and explicitly tested for both pipelines; 2D changes never leak into 3D (and vice versa).
+== Meshing Modes
 
-=== Step/State Objects (b3_state integration)
+The library explicitly supports three distinct modes:
 
-- `B3MshStep`: processes pre-computed 2D sections, inserts shear webs/hard points, and writes a merged VTP line mesh.  
-- `B3MshSurfaceStep`: consumes the 2D line meshes, performs 3D surface generation, and propagates all required coordinates.  
+- *Line* (pure 2D single section):  
+  Handled directly by the `Airfoil` class in `meshing/airfoil/`.  
+  Used by CLI commands `plot` and `remesh`.  
+  Produces a single 2D line mesh (with optional shear webs).
 
-The two steps have completely separate input/output manifests and dependency graphs; combining them would harm testability and state management. They remain together in one library because *meshing* is the single domain responsibility of b3_msh.
+- *Multiline* (2D multi-section blade):  
+  Handled in `multiline/`.  
+  Stacks multiple line meshes into VTP or VTM output.  
+  Uses shared `meshing/` components for consistent section processing.
 
-== Functionality
+- *Surface* (3D quad mesh):  
+  Handled in `surface/`.  
+  Connects multiline sections into full 3D surface quads.  
+  Propagates chordwise / spanwise coordinates and panel IDs.
 
-=== Input
-- Normalised (chord = 1) XFOIL files or raw NumPy arrays.  
-- Full-scale 3D airfoils (x, y, z already supplied).  
-- Automatic scaling, rotation, and translation to target position.
+== Layer Responsibilities
 
-=== Remeshing
-- Regenerates the mesh from the *original* input spline (never from a previously remeshed result).  
-- Supports:
-  - Local refinement relative to current distribution  
-  - Fixed number of points per panel  
-  - Absolute or relative target element length  
-  - Arbitrary t-distribution (including hard-point forcing)
+- *meshing/ *: All fundamental geometry, spline interpolation, hard points, panels, and web intersection logic. This is the heart of the library and is used by *all three modes*.
+- *multiline/ *: Responsible for multiline (multi-section line-mesh) blade processing and VTP/VTM combination.
+- *surface/ *: Responsible for surface (3D quad) meshing by connecting adjacent sections.
+- *cli/ *: Thin command layer. Must remain one public function per file.
+- *step/ *: Thin re-exports so `b3_state` workflows can import `B3MshLineStep` and `B3MshSurfaceStep` cleanly.
 
-=== Hard Points & Panels
-- Hard points are nodes that survive any remeshing (default: LE t=0 and TE t=1).  
-- Can be specified by parametric t, by name, or by geometric construction (see shear webs).  
-- A *panel* is the segment between two consecutive hard points.  
-- Adding a shear web at t=0.3 and t=0.7 automatically creates three panels (0–0.3, 0.3–0.7, 0.7–1).
+== Core Concepts
 
-=== Shear Webs
+- Parametric coordinate *t ∈ [0, 1]* (LE = 0, TE = 1). All remeshing derives from the original spline.
+- Hard points define panel boundaries and survive remeshing.
+- Shear webs (plane, line, trailing_edge, ribbon) automatically insert hard points.
+- Ribbon webs support spanwise-varying offsets via PCHIP interpolation.
 
-==== 2D / Basic 3D
-- Defined by:
-  - Plane (origin + normal)  
-  - Straight line in the 2D plane  
-- Intersection with the airfoil spline yields two hard points.  
-- Named webs (default `web0`, `web1`, …) automatically attach coordinate arrays to the output mesh (absolute/relative distance from each web endpoint along the surface).
+== Design Principles
 
-==== Ribbon Webs (3D-only)
-- New `Ribbon` class.  
-- Defined relative to a *reference web* plus a list of key points `[[z, offset], …]`.  
-- Offset is interpolated with PCHIP for any intermediate spanwise location, enabling swept/angled ribbon webs that follow the blade twist and sweep.
+- Single responsibility per file and per module.
+- Strict separation of line / multiline / surface logic — no cross-contamination.
+- `meshing/` is the only place for core geometry algorithms.
+- One public function or class per `.py` file where practical.
+- All changes must be accompanied by updated tests in the matching test directory.
+- Prefer explicit over implicit. Favor readability for both humans and LLMs.
+- Never delete or rename files outside the current working directory.
+
+== Examples
+
+The `examples/` directory contains runnable Python scripts that demonstrate *all three modes* programmatically:
+
+- `example_usage.py` and `explicit_n_elements_example.py` → Line (single section)
+- `process_blade.py` and `run_blade_example.py` → Multiline (blade)
+- `process_surface.py` and `run_surface_example.py` → Surface (with ribbon webs)
+
+These examples serve as living documentation and must continue to run after any change.
 
 == Tech Stack
-- Core interpolation: SciPy PCHIP univariate spline  
-- Array handling: NumPy (fully vectorised)  
-- Output & visualisation: PyVista (VTU/VTP, line and surface meshes)  
-- Configuration: Pydantic models  
-- Testing: pytest + coverage  
-- Plotting: Matplotlib  
-- Parallelism: multiprocessing at the airfoil/section level (full blades processed in parallel)  
+
+- Core: NumPy (vectorised), SciPy PCHIP
+- Meshing & I/O: PyVista
+- Configuration: Pydantic
+- CLI: treeparse
+- State management: b3_state
+- Formatting: ruff
+- Testing: pytest
 
 == Testing Strategy
-- Separate test suites:
-  - `tests/test_airfoil.py`, `tests/test_shear_web.py` (2D)  
-  - `tests/test_surface_mesh.py` (3D)  
-- Shared components tested in both contexts.  
-- PyVista output format is explicitly verified after every third-party change.
 
-== Key Design Principles
-- *Single responsibility*: each module/file owns exactly one concern.  
-- *Strict separation of 2D/3D*: no cross-contamination.  
-- *Immutable original spline*: all remeshing derives from the input data only.  
-- *Extensibility*: new web types, mesh specs, or output formats can be added via new Pydantic models or step classes.  
-- *Performance-first*: vectorised NumPy + multiprocessing wherever possible.
+- `tests/meshing/` — core airfoil and web logic (used by all modes)
+- `tests/multiline/` — multiline pipeline
+- `tests/surface/`   — surface pipeline
+- All examples must continue to run after any change.
 
-== Maintenance Notes
-- When touching `AirfoilCore` or any shared utility, run the full 2D *and* 3D test suites.  
-- New meshing features belong in 2D, 3D, or shared—prefer separation unless the feature is truly common.  
-- Keep this document up-to-date when new steps or web types are introduced.  
-- PyVista compatibility must be re-validated after library upgrades (recent line-format fixes affected both pipelines).
+== Maintenance Rules (Mandatory for LLMs)
 
-This design keeps b3_msh focused, testable, and future-proof while delivering a clean, powerful interface for both 2D airfoil work and full 3D blade surface meshing.
+1. Before editing anything in `meshing/`, run the full test suite (line + multiline + surface).
+2. When adding new functionality, decide first: shared (`meshing/`), line-only, multiline (`multiline/`), or surface-only (`surface/`).
+3. Keep this `design_brief.typ` up to date when the architecture changes.
+4. Use high-level one-line docstrings and clear function names.
+5. Directory tree must always accurately reflect current responsibilities.
+
+This document is the single source of truth for the architecture of b3_msh. All future development must align with it.

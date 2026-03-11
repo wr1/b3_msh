@@ -3,7 +3,7 @@
 import numpy as np
 import pyvista as pv
 
-from ....utils.logger import get_logger
+from b3_msh.utils.logger import get_logger
 
 
 class AirfoilViz:

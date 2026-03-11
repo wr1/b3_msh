@@ -3,7 +3,7 @@
 import numpy as np
 from scipy.interpolate import PchipInterpolator
 
-from ....utils.logger import get_logger
+from b3_msh.utils.logger import get_logger
 
 
 class AirfoilCore:

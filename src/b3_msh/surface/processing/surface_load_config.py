@@ -1,7 +1,9 @@
 import os
 
+from b3_msh.utils.logger import get_logger
+
 from .blade_load_config import blade_load_config
-from ...utils.logger import get_logger
+
 
 def surface_load_config(config_path):
     """Load config for surface processing."""

@@ -4,7 +4,7 @@ import os
 import numpy as np
 import pyvista as pv
 
-from ...utils.logger import get_logger
+from b3_msh.utils.logger import get_logger
 from .blade_load_config import blade_load_config
 from .blade_process_sections import blade_process_sections
 from .blade_save_vtp import blade_save_vtp

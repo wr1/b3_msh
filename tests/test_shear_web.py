@@ -1,7 +1,7 @@
 import numpy as np
 
-from b3_msh.core.airfoil import Airfoil
-from b3_msh.core.shear_web import ShearWeb
+from b3_msh.meshing.airfoil import Airfoil
+from b3_msh.meshing.webs.shear_web import ShearWeb
 
 
 def test_shear_web_plane():
@@ -83,6 +83,8 @@ def test_shear_web_named():
     )
     af.add_shear_web(sw)
     mesh = af.to_pyvista()
+    assert "abs_dist_t0" in mesh.point_data
+    assert "abs_dist_t1" in mesh.point_data
     assert "abs_dist_test_web_hp0" in mesh.point_data
     assert "abs_dist_test_web_hp1" in mesh.point_data
 

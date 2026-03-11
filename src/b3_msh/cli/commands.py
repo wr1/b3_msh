@@ -2,9 +2,10 @@ import logging
 
 import numpy as np
 
-from ..core.airfoil import Airfoil
-from ..core.processing import process_blade_config, process_surface_config
-from ..utils.logger import get_logger
+from b3_msh.meshing.airfoil import Airfoil
+from b3_msh.multiline.processing.process_blade_config import process_blade_config
+from b3_msh.surface.processing.process_surface_config import process_surface_config
+from b3_msh.utils.logger import get_logger
 
 
 def plot(

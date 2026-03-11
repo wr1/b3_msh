@@ -1,8 +1,7 @@
 """Plotting functionality for Airfoil."""
 
 import matplotlib.pyplot as plt
-
-from ....utils.logger import get_logger
+from b3_msh.utils.logger import get_logger
 import numpy as np
 
 

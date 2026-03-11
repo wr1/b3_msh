@@ -4,7 +4,7 @@ import numpy as np
 import pyvista as pv
 import yaml
 
-from b3_msh.step.blade_mesh_step import B3MshStep
+from b3_msh.multiline.step.B3MshLineStep import B3MshLineStep as B3MshStep
 from b3_msh.utils.logger import get_logger
 
 

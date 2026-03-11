@@ -4,12 +4,13 @@ import os
 import numpy as np
 import pyvista as pv
 
-from ...utils.logger import get_logger
+from b3_msh.utils.logger import get_logger
 from .surface_build_faces import surface_build_faces
 from .surface_build_point_data import surface_build_point_data
 from .surface_collect_section_data import surface_collect_section_data
 from .surface_load_config import surface_load_config
 from .surface_process_sections import surface_process_sections
+
 
 def process_surface_config(config_path, verbose=False):
     """Process surface mesh from YAML config."""
@@ -45,7 +46,9 @@ def process_surface_config(config_path, verbose=False):
 
     output_path = os.path.join(workdir, "b3_msh", "lm2_surface_mesh.vtp")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    logger.info(f"Surface mesh created with {surface_mesh.n_points} points, {surface_mesh.n_cells} cells")
+    logger.info(
+        f"Surface mesh created with {surface_mesh.n_points} points, {surface_mesh.n_cells} cells"
+    )
     logger.info(f"Saving surface mesh to {output_path}")
     surface_mesh.save(output_path)
     logger.info(f"Saved surface mesh to {output_path}")

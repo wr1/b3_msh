@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 
-from b3_msh.step.surface_mesh_step import B3MshSurfaceStep
+from b3_msh.surface.step.B3MshSurfaceStep import B3MshSurfaceStep
 
 
 def test_surface_step_attributes():
@@ -66,11 +66,13 @@ def test_surface_step_execute():
     mock_mesh.lines = np.array([2, 0, 1, 2, 1, 2, 2, 2, 3])  # Mock lines
     mock_af = Mock()
     mock_af.position = [0, 0, 0]
+    mock_af.current_points = np.array([[0, 0, 0], [1, 0, 0], [0.5, 0.1, 0]])
+    mock_af.current_t = np.array([0, 0.5, 1])
     mock_af.to_pyvista = Mock(return_value=mock_mesh)
     step.process_section_from_mesh = Mock(return_value=mock_af)
     # Mock pv.read and PolyData
     with (
-        patch("b3_msh.step.surface_mesh_step.pv.read", return_value=mock_mesh) as mock_read,
+        patch("b3_msh.surface.step.B3MshSurfaceStep.pv.read", return_value=mock_mesh) as mock_read,
         patch("pyvista.PolyData") as mock_poly_class,
         patch("pathlib.Path.exists", return_value=True),
     ):
@@ -121,7 +123,7 @@ def test_surface_step_no_mesh3d():
 
 
 def test_point_data_propagation():
-    """Test point data propagation in surface mesh (Phase 1)."""
+    """Test point data propagation in surface mesh."""
     # Mock two sections with point_data
     mock_pv1 = Mock()
     mock_pv1.points = np.zeros((3, 3))
@@ -136,16 +138,34 @@ def test_point_data_propagation():
     mock_pv2.cell_data = {"panel_id": np.array([0, 1])}
 
     sections = [Mock(), Mock()]
-    sections[0].to_pyvista.return_value = mock_pv1
-    sections[1].to_pyvista.return_value = mock_pv2
+    sections[0].to_pyvista = Mock(return_value=mock_pv1)
+    sections[1].to_pyvista = Mock(return_value=mock_pv2)
+    sections[0].position = [0, 0, 0]
+    sections[1].position = [0, 0, 1]
+    sections[0].current_points = np.zeros((3, 3))
+    sections[1].current_points = np.ones((3, 3))
+    sections[0].current_t = np.array([0.0, 0.5, 1.0])
+    sections[1].current_t = np.array([0.1, 0.6, 1.1])
 
     step = object.__new__(B3MshSurfaceStep)
     step.logger = Mock()
     output_path = Mock()
 
-    # Patch to avoid full execute, test _create_surface_mesh
-    with patch.object(step, "_create_surface_mesh"):
+    # Mock pv.PolyData to capture point_data assignment
+    with patch("b3_msh.surface.step.B3MshSurfaceStep.pv.PolyData") as mock_poly_class:
+        mock_poly = Mock()
+        mock_poly_class.return_value = mock_poly
+        mock_poly.n_points = 6
+        mock_poly.n_cells = 2
+        mock_poly.point_data = {}
+
+        # Call the method
         step._create_surface_mesh(sections, output_path)
 
-    # Note: Full test requires deeper mocking, but verify logic indirectly via logs or separate func test
-    step.logger.info.assert_any_call(Mock(match="Point data keys"))
+        # Assert that point_data keys include propagated ones
+        expected_keys = {"t", "Normals", "z", "dist_from_te", "chordwise_coord", "spanwise_coord"}
+        actual_keys = set(mock_poly.point_data.keys())
+        assert expected_keys.issubset(actual_keys), f"Missing keys: {expected_keys - actual_keys}"
+
+        # Assert logger was called with point data keys message
+        step.logger.info.assert_any_call(f"Point data keys: {list(mock_poly.point_data.keys())}")

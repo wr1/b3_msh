@@ -4,7 +4,7 @@ import numpy as np
 import pyvista as pv
 import yaml
 
-from b3_msh.step.surface_mesh_step import B3MshSurfaceStep
+from b3_msh.surface.step.B3MshSurfaceStep import B3MshSurfaceStep as B3MshSurfaceStep
 from b3_msh.utils.logger import get_logger
 
 
@@ -123,7 +123,7 @@ def main():
     config_path = "examples/blade_test_ribbon.yml"  # Use the ribbon config with mesh3d
     config = load_yaml_config(config_path)
 
-    workdir = config["workdir"]
+    workdir = os.path.join("examples", config["workdir"])
     mesh3d_config = config["mesh3d"]
     z_specs = mesh3d_config["z"]
     z_values = []

@@ -6,9 +6,8 @@ from b3_state import b3_state
 from b3_state.core.base import ManagedFile
 from scipy.interpolate import PchipInterpolator, interp1d
 
-from ..core.airfoil import Airfoil
-from ..core.mesh_model import Config
-from ..core.shear_web import ShearWeb
+from b3_msh.meshing.airfoil import Airfoil
+from b3_msh.meshing.webs import ShearWeb
 
 
 class B3MshLineStep(b3_state):
@@ -33,6 +32,8 @@ class B3MshLineStep(b3_state):
 
     def _load_and_validate_config(self):
         """Load and validate config."""
+        from b3_msh.meshing.airfoil.models import Config
+
         config_model = Config(**self.config)
         self.config_model = config_model
         return config_model

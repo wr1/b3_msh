@@ -6,8 +6,8 @@ from b3_state import b3_state
 from b3_state.core.base import ManagedFile
 from scipy.interpolate import PchipInterpolator, interp1d
 
-from ..core.airfoil import Airfoil
-from ..core.shear_web import ShearWeb
+from b3_msh.meshing.airfoil import Airfoil
+from b3_msh.meshing.webs import ShearWeb
 
 
 class B3MshSurfaceStep(b3_state):
@@ -32,7 +32,7 @@ class B3MshSurfaceStep(b3_state):
 
     def _load_and_validate_config(self):
         """Load and validate config."""
-        from ..core.mesh_model import Config
+        from b3_msh.meshing.airfoil.models import Config
 
         config_model = Config(**self.config)
         if config_model.mesh3d is None:
@@ -153,13 +153,14 @@ class B3MshSurfaceStep(b3_state):
             for k in sec_data["point_data"]:
                 all_point_data_keys.add(k)
                 if k not in point_dtype:
-                    point_dtype[k] = sec_data["point_data"][k].dtype
+                    arr = sec_data["point_data"][k]
+                    point_dtype[k] = (arr.dtype, arr.shape[1:] if arr.ndim > 1 else ())
 
         # Add new coordinate keys
         new_keys = ["dist_from_te", "chordwise_coord", "spanwise_coord"]
         for key in new_keys:
             all_point_data_keys.add(key)
-            point_dtype[key] = float
+            point_dtype[key] = (float, ())
 
         # Compute global min_z, max_z for spanwise_coord
         all_z = [af.position[2] for af in sections]
@@ -170,6 +171,7 @@ class B3MshSurfaceStep(b3_state):
         point_data_global = {}
         for key in all_point_data_keys:
             arrays = []
+            dtype_k, shape_k = point_dtype[key]
             for i, sec_data in enumerate(section_data):
                 af = sections[i]
                 n_airfoil = sec_data["n_airfoil"]
@@ -184,23 +186,21 @@ class B3MshSurfaceStep(b3_state):
                     cum_arc = np.insert(cum_arc, 0, 0)
                     total_arc = cum_arc[-1]
                     dist_from_te = total_arc - cum_arc
-                    dist_from_te_full = np.full(n_total, np.nan)
+                    dist_from_te_full = np.full((n_total,) + shape_k, np.nan, dtype=dtype_k)
                     dist_from_te_full[:n_airfoil] = dist_from_te
                     arrays.append(dist_from_te_full)
                 elif key == "chordwise_coord":
                     # Parametric t, assuming t=0 at LE, t=1 at TE
-                    chordwise_full = np.full(n_total, np.nan)
+                    chordwise_full = np.full((n_total,) + shape_k, np.nan, dtype=dtype_k)
                     chordwise_full[:n_airfoil] = af.current_t
                     arrays.append(chordwise_full)
                 elif key == "spanwise_coord":
                     # Normalized span position
                     z_val = af.position[2]
                     spanwise = (z_val - min_z) / span_range
-                    arrays.append(np.full(n_total, spanwise))
+                    arrays.append(np.full((n_total,) + shape_k, spanwise, dtype=dtype_k))
                 else:
-                    n_pts = sec_data["n_points"]
-                    dtype_k = point_dtype[key]
-                    pad = np.full(n_pts, np.nan, dtype=dtype_k)
+                    pad = np.full((n_total,) + shape_k, np.nan, dtype=dtype_k)
                     arrays.append(pad)
             point_data_global[key] = np.concatenate(arrays)
         return point_data_global

@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from ....utils.logger import get_logger
+from b3_msh.utils.logger import get_logger
 
 
 class AirfoilMesh:
