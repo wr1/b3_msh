@@ -11,7 +11,7 @@ from ..core.mesh_model import Config
 from ..core.shear_web import ShearWeb
 
 
-class B3MshStep(b3_state):
+class B3MshLineStep(b3_state):
     """b3_state step for running b3_msh blade processing."""
 
     workdir_key = "workdir"
@@ -220,7 +220,7 @@ class B3MshStep(b3_state):
 
     def _execute(self):
         """Execute the step."""
-        self.logger.info("Executing B3MshStep: Processing blade mesh.")
+        self.logger.info("Executing B3MshLineStep: Processing blade mesh.")
         config_model = self._load_and_validate_config()
         self._expand_mesh_z()
 

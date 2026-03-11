@@ -82,6 +82,7 @@ class B3MshSurfaceStep(b3_state):
                     "lines": lines,
                     "panel_ids": panel_ids,
                     "n_points": len(points),
+                    "n_airfoil": len(af.current_points),
                     "n_airfoil_lines": len(airfoil_lines),
                     "shear_web_lines": shear_web_lines,
                     "point_data": {k: v.copy() for k, v in pv_mesh.point_data.items()},
@@ -171,6 +172,8 @@ class B3MshSurfaceStep(b3_state):
             arrays = []
             for i, sec_data in enumerate(section_data):
                 af = sections[i]
+                n_airfoil = sec_data["n_airfoil"]
+                n_total = sec_data["n_points"]
                 if key in sec_data["point_data"]:
                     arrays.append(sec_data["point_data"][key])
                 elif key == "dist_from_te":
@@ -181,15 +184,19 @@ class B3MshSurfaceStep(b3_state):
                     cum_arc = np.insert(cum_arc, 0, 0)
                     total_arc = cum_arc[-1]
                     dist_from_te = total_arc - cum_arc
-                    arrays.append(dist_from_te)
+                    dist_from_te_full = np.full(n_total, np.nan)
+                    dist_from_te_full[:n_airfoil] = dist_from_te
+                    arrays.append(dist_from_te_full)
                 elif key == "chordwise_coord":
                     # Parametric t, assuming t=0 at LE, t=1 at TE
-                    arrays.append(af.current_t)
+                    chordwise_full = np.full(n_total, np.nan)
+                    chordwise_full[:n_airfoil] = af.current_t
+                    arrays.append(chordwise_full)
                 elif key == "spanwise_coord":
                     # Normalized span position
                     z_val = af.position[2]
                     spanwise = (z_val - min_z) / span_range
-                    arrays.append(np.full(sec_data["n_points"], spanwise))
+                    arrays.append(np.full(n_total, spanwise))
                 else:
                     n_pts = sec_data["n_points"]
                     dtype_k = point_dtype[key]
@@ -213,7 +220,9 @@ class B3MshSurfaceStep(b3_state):
         for key, arr in point_data_global.items():
             surface_mesh.point_data[key] = arr
 
-        self.logger.info(f"Surface mesh created with {surface_mesh.n_points} points, {surface_mesh.n_cells} cells")
+        self.logger.info(
+            f"Surface mesh created with {surface_mesh.n_points} points, {surface_mesh.n_cells} cells"
+        )
         self.logger.info(f"Point data keys: {list(surface_mesh.point_data.keys())}")
 
         # Save
