@@ -1,6 +1,4 @@
-"""Process surface sections (one function)."""
-
-from ..step.surface_mesh_step import B3MshSurfaceStep
+from ...step.surface_mesh_step import B3MshSurfaceStep
 
 def surface_process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config):
     """Process sections for surface meshing."""

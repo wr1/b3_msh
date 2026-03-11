@@ -1,12 +1,10 @@
-"""Main surface processing entry point (one function)."""
-
 import logging
 import os
 
 import numpy as np
 import pyvista as pv
 
-from ..utils.logger import get_logger
+from ...utils.logger import get_logger
 from .surface_build_faces import surface_build_faces
 from .surface_build_point_data import surface_build_point_data
 from .surface_collect_section_data import surface_collect_section_data
