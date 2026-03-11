@@ -59,6 +59,24 @@ class B3MshStep(b3_state):
             sections.append(af)
         return sections
 
+    def _collect_cell_data_keys(self, rmeshes):
+        """Collect all unique cell_data keys."""
+        all_keys = set()
+        dtype_dict = {}
+        for mesh in rmeshes:
+            for key in mesh.cell_data.keys():
+                all_keys.add(key)
+                if key not in dtype_dict:
+                    dtype_dict[key] = mesh.cell_data[key].dtype
+        return all_keys, dtype_dict
+
+    def _pad_missing_cell_data(self, rmeshes, all_keys, dtype_dict):
+        """Pad missing keys with zeros."""
+        for mesh in rmeshes:
+            for key in all_keys:
+                if key not in mesh.cell_data:
+                    mesh.cell_data[key] = np.zeros(mesh.n_cells, dtype=dtype_dict[key])
+
     def _merge_and_save_mesh(self, sections, output_path):
         """Merge meshes and save."""
         self.logger.info("Merging meshes into single PolyData")
@@ -72,18 +90,9 @@ class B3MshStep(b3_state):
                 if key in mesh.cell_data:
                     del mesh.cell_data[key]
         # Collect all unique cell_data keys across all meshes
-        all_keys = set()
-        dtype_dict = {}
-        for mesh in rmeshes:
-            for key in mesh.cell_data.keys():
-                all_keys.add(key)
-                if key not in dtype_dict:
-                    dtype_dict[key] = mesh.cell_data[key].dtype
+        all_keys, dtype_dict = self._collect_cell_data_keys(rmeshes)
         # For each mesh, add missing keys with zero arrays
-        for mesh in rmeshes:
-            for key in all_keys:
-                if key not in mesh.cell_data:
-                    mesh.cell_data[key] = np.zeros(mesh.n_cells, dtype=dtype_dict[key])
+        self._pad_missing_cell_data(rmeshes, all_keys, dtype_dict)
         # Merge into single UnstructuredGrid
         merged_mesh = pv.merge(rmeshes)
         # Manually concatenate constant fields if present

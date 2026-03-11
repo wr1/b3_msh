@@ -15,33 +15,9 @@ def load_yaml_config(config_path):
     return config
 
 
-def main():
-    logger = get_logger(__name__)
-    logger.info("Starting surface meshing")
-
-    config_path = "examples/blade_test_ribbon.yml"  # Use the ribbon config with mesh3d
-    config = load_yaml_config(config_path)
-
-    workdir = config["workdir"]
-    mesh3d_config = config["mesh3d"]
-    z_specs = mesh3d_config["z"]
-    z_values = []
-    for z_spec in z_specs:
-        if z_spec["type"] == "plain":
-            z_values.extend(z_spec["values"])
-        elif z_spec["type"] == "linspace":
-            z_values.extend(np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"]))
-    logger.info(f"Found z sections: {np.round(z_values, 2).tolist()}")
-    chordwise_mesh = mesh3d_config["chordwise"]
-    webs_config = config["structure"]["webs"]
-
-    # Load the pre-processed mesh
-    input_path = os.path.join("examples", workdir, "b3_geo", "lm1_mesh.vtp")
-    logger.info(f"Loading pre-processed mesh from {input_path}")
-    mesh = pv.read(input_path)
-    logger.info("Loaded mesh successfully")
+def process_sections(logger, mesh, z_values, chordwise_mesh, webs_config):
+    """Process each section."""
     logger.info("Processing sections for surface mesh")
-    # Process each section
     sections = []
     for z in z_values:
         logger.info(f"Processing section at z={z}")
@@ -49,11 +25,14 @@ def main():
             mesh, z, chordwise_mesh, webs_config, logger
         )
         sections.append(af)
+    return sections
 
+
+def create_and_save_surface_mesh(logger, sections, workdir):
+    """Create surface mesh and save."""
     # Sort sections by z
     sections.sort(key=lambda af: af.position[2])
 
-    # Create surface mesh
     all_points = []
     all_faces = []
     point_offset = 0
@@ -80,8 +59,9 @@ def main():
                 "shear_web_lines": shear_web_lines,
             }
         )
+        shear_web_info = {k: len(v) for k, v in shear_web_lines.items()}
         logger.info(
-            f"Section {i} (z={af.position[2]:.2f}): {len(points)} points, {len(airfoil_lines)} airfoil lines, shear webs: { {k: len(v) for k, v in shear_web_lines.items()} }"
+            f"Section {i} (z={af.position[2]:.2f}): {len(points)} points, {len(airfoil_lines)} airfoil lines, shear webs: {shear_web_info}"
         )
 
     for i in range(len(sections) - 1):
@@ -129,11 +109,41 @@ def main():
     all_points.extend(section_data[-1]["points"])
 
     surface_mesh = pv.PolyData(np.array(all_points), faces=np.array(all_faces))
-    output_path = os.path.join("examples", workdir, "b3_msh", "lm2_surface_mesh.vtp")
+    output_path = os.path.join(workdir, "b3_msh", "lm2_surface_mesh.vtp")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     logger.info(f"Saving surface mesh to {output_path}")
     surface_mesh.save(output_path)
     logger.info(f"Saved surface mesh to {output_path}")
+
+
+def main():
+    logger = get_logger(__name__)
+    logger.info("Starting surface meshing")
+
+    config_path = "examples/blade_test_ribbon.yml"  # Use the ribbon config with mesh3d
+    config = load_yaml_config(config_path)
+
+    workdir = config["workdir"]
+    mesh3d_config = config["mesh3d"]
+    z_specs = mesh3d_config["z"]
+    z_values = []
+    for z_spec in z_specs:
+        if z_spec["type"] == "plain":
+            z_values.extend(z_spec["values"])
+        elif z_spec["type"] == "linspace":
+            z_values.extend(np.linspace(z_spec["values"][0], z_spec["values"][1], z_spec["num"]))
+    logger.info(f"Found z sections: {np.round(z_values, 2).tolist()}")
+    chordwise_mesh = mesh3d_config["chordwise"]
+    webs_config = config["structure"]["webs"]
+
+    # Load the pre-processed mesh
+    input_path = os.path.join(workdir, "b3_geo", "lm1_mesh3d.vtp")
+    logger.info(f"Loading pre-processed mesh from {input_path}")
+    mesh = pv.read(input_path)
+    logger.info("Loaded mesh successfully")
+
+    sections = process_sections(logger, mesh, z_values, chordwise_mesh, webs_config)
+    create_and_save_surface_mesh(logger, sections, workdir)
 
 
 if __name__ == "__main__":

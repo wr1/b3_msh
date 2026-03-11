@@ -51,7 +51,7 @@ class ShearWeb:
             return t1, t2
         except ValueError:
             self.logger.error("Plane does not intersect airfoil at two points")
-            raise ValueError("Plane does not intersect airfoil at two points")
+            raise ValueError("Plane does not intersect airfoil at two points") from None
 
     def _intersect_line(self, airfoil):
         """Find t where spline is closest to line (approximate intersection)."""

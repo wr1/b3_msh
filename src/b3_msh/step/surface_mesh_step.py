@@ -62,16 +62,8 @@ class B3MshSurfaceStep(b3_state):
             sections.append(af)
         return sections
 
-    def _create_surface_mesh(self, sections, output_path):
-        """Create surface mesh by connecting line meshes into quads."""
-        self.logger.info("Creating surface mesh")
-        # Sort sections by z position
-        sections.sort(key=lambda af: af.position[2])
-        all_points = []
-        all_faces = []
-        point_offset = 0
-
-        # Collect points and faces for each section
+    def _collect_section_data(self, sections):
+        """Collect section data for meshing."""
         section_data = []
         for i, af in enumerate(sections):
             pv_mesh = af.to_pyvista()
@@ -95,11 +87,17 @@ class B3MshSurfaceStep(b3_state):
                     "point_data": {k: v.copy() for k, v in pv_mesh.point_data.items()},
                 }
             )
+            shear_web_info = {k: len(v) for k, v in shear_web_lines.items()}
             self.logger.info(
-                f"Section {i} (z={af.position[2]:.2f}): {len(points)} points, {len(airfoil_lines)} airfoil lines, shear webs: {{{k: len(v) for k, v in shear_web_lines.items()}}}"
+                f"Section {i} (z={af.position[2]:.2f}): {len(points)} points, {len(airfoil_lines)} airfoil lines, shear webs: {shear_web_info}"
             )
+        return section_data
 
-        # Assume sections have consistent line elements for panel_id >= 0
+    def _create_faces(self, section_data, sections):
+        """Create faces by connecting sections."""
+        all_points = []
+        all_faces = []
+        point_offset = 0
         for i in range(len(sections) - 1):
             sec1 = section_data[i]
             sec2 = section_data[i + 1]
@@ -144,8 +142,10 @@ class B3MshSurfaceStep(b3_state):
 
         # Add last section points
         all_points.extend(section_data[-1]["points"])
+        return all_points, all_faces
 
-        # Propagate point data from sections (Phase 1)
+    def _propagate_point_data(self, section_data, sections):
+        """Propagate point data from sections."""
         all_point_data_keys = set()
         point_dtype = {}
         for sec_data in section_data:
@@ -196,6 +196,17 @@ class B3MshSurfaceStep(b3_state):
                     pad = np.full(n_pts, np.nan, dtype=dtype_k)
                     arrays.append(pad)
             point_data_global[key] = np.concatenate(arrays)
+        return point_data_global
+
+    def _create_surface_mesh(self, sections, output_path):
+        """Create surface mesh by connecting line meshes into quads."""
+        self.logger.info("Creating surface mesh")
+        # Sort sections by z position
+        sections.sort(key=lambda af: af.position[2])
+
+        section_data = self._collect_section_data(sections)
+        all_points, all_faces = self._create_faces(section_data, sections)
+        point_data_global = self._propagate_point_data(section_data, sections)
 
         # Create PyVista mesh
         surface_mesh = pv.PolyData(np.array(all_points), faces=np.array(all_faces))

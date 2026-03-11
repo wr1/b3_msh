@@ -1,6 +1,5 @@
-"""Visualization functionality for Airfoil, including plotting and PyVista export."""
+"""Visualization functionality for Airfoil, including PyVista export."""
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pyvista as pv
 
@@ -8,7 +7,7 @@ from ..utils.logger import get_logger
 
 
 class AirfoilViz:
-    """Visualization functionality for Airfoil, including plotting and PyVista export."""
+    """Visualization functionality for Airfoil, including PyVista export."""
 
     def __init__(self):
         self.logger = get_logger(self.__class__.__name__)
@@ -40,17 +39,20 @@ class AirfoilViz:
         return all_points, web_w, web_info
 
     def _create_lines_and_cells(self, all_points, web_info):
-        """Create lines and cell data for PyVista."""
-        len(all_points)
+        """Create lines and cell data for PyVista.
+
+        NOTE: PyVista PolyData lines= requires explicit cell size prefix (2 points per line segment).
+        This was the root cause of the CellSizeError after 3D surface refactoring.
+        """
         lines = []
-        # Airfoil lines
+        # Airfoil lines - each segment prefixed with 2 (PyVista connectivity format)
         for i in range(len(self.current_points) - 1):
             lines.extend([2, i, i + 1])
         # Shear web lines
         for sw, start_idx, n_points_web in web_info:
             for i in range(n_points_web - 1):
                 lines.extend([2, start_idx + i, start_idx + i + 1])
-        lines = np.array(lines)
+        lines = np.array(lines, dtype=np.int64)
         poly = pv.PolyData(all_points, lines=lines)
         # Add panel id to cells
         self.get_panels()
@@ -79,7 +81,7 @@ class AirfoilViz:
         poly.cell_data["panel_id"] = cell_data
         return poly
 
-    def _add_point_data(self, poly, all_points, web_w, web_info):
+    def _add_point_data(self, poly, all_points, web_w):
         """Add point data to the mesh."""
         # Add constant fields to cell_data
         if hasattr(self, "constant_fields"):
@@ -141,7 +143,6 @@ class AirfoilViz:
                 # Web point - compute normal in plane of mesh
                 # Find which web this point belongs to
                 web_idx = 0
-                i - len(self.current_points)
                 for sw_idx, (sw, start_idx, n_points_web) in enumerate(web_info):
                     if start_idx <= i < start_idx + n_points_web:
                         web_idx = sw_idx
@@ -167,52 +168,9 @@ class AirfoilViz:
         self.logger.debug("Exporting to PyVista")
         all_points, web_w, web_info = self._create_pyvista_mesh()
         poly = self._create_lines_and_cells(all_points, web_info)
-        poly = self._add_point_data(poly, all_points, web_w, web_info)
+        poly = self._add_point_data(poly, all_points, web_w)
         poly = self._add_normals(poly, all_points, web_info)
         self.logger.debug(
             f"PyVista mesh created with {poly.n_points} points and {poly.n_cells} cells"
         )
         return poly
-
-    def plot(self, show_hard_points=False, save_path=None, show=True):
-        """Plot the airfoil using Matplotlib."""
-        self.logger.debug("Plotting airfoil")
-        plt.figure()  # Create a new figure to avoid overlapping
-        points = self.current_points
-        plt.plot(points[:, 0], points[:, 1], "b-", alpha=0.5)
-        # Plot shear webs
-        for sw in self.shear_webs:
-            t1, t2 = sw.compute_intersections(self)
-            p1 = self.get_points([t1])[0]
-            p2 = self.get_points([t2])[0]
-            n_elements = self.shear_web_n_elements[sw]
-            n_points_web = n_elements + 1
-            web_points = np.linspace(p1, p2, n_points_web)
-            plt.plot(web_points[:, 0], web_points[:, 1], "g-", alpha=0.5, linewidth=2)
-            plt.plot(web_points[:, 0], web_points[:, 1], "g.", markersize=4)
-        # Plot non-hard points with .
-        non_hard_mask = ~np.isin(self.current_t, self.hard_points)
-        plt.plot(points[non_hard_mask, 0], points[non_hard_mask, 1], "k.", markersize=2)
-        plt.axis("equal")
-        plt.xlabel("x")
-        plt.ylabel("y")
-        plt.title("Airfoil Mesh")
-        plt.grid(True)
-        if show_hard_points:
-            hard_points_pos = self.get_points(self.hard_points)
-            plt.plot(hard_points_pos[:, 0], hard_points_pos[:, 1], "ro", markersize=8)
-            for i, (x, y, _) in enumerate(hard_points_pos):
-                plt.text(
-                    x,
-                    y + 0.01,
-                    f"t={self.hard_points[i]:.2f}",
-                    fontsize=8,
-                    ha="center",
-                    va="bottom",
-                )
-        if save_path:
-            plt.savefig(save_path)
-            self.logger.info(f"Plot saved to {save_path}")
-        if show and save_path is None:
-            plt.show()
-        self.logger.debug("Plotting complete")
