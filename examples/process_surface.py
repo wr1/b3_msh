@@ -4,7 +4,7 @@ import numpy as np
 import pyvista as pv
 import yaml
 
-from b3_msh.surface.step.B3MshSurfaceStep import B3MshSurfaceStep as B3MshSurfaceStep
+from b3_msh.surface.step.b3_msh_surface_step import b3_msh_surface_step
 from b3_msh.utils.logger import get_logger
 
 
@@ -21,7 +21,7 @@ def process_sections(logger, mesh, z_values, chordwise_mesh, webs_config):
     sections = []
     for z in z_values:
         logger.info(f"Processing section at z={z}")
-        af = B3MshSurfaceStep.process_section_from_mesh(
+        af = b3_msh_surface_step.process_section_from_mesh(
             mesh, z, chordwise_mesh, webs_config, logger
         )
         sections.append(af)

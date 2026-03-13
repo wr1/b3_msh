@@ -1,5 +1,5 @@
 """Multiline (2D multi-section blade) package."""
 
-from .step.B3MshLineStep import B3MshLineStep
+from .step.b3_msh_line_step import b3_msh_line_step
 
-__all__ = ["B3MshLineStep"]
+__all__ = ["b3_msh_line_step"]

@@ -4,7 +4,7 @@ import numpy as np
 import pyvista as pv
 import yaml
 
-from b3_msh.multiline.step.B3MshLineStep import B3MshLineStep as B3MshStep
+from b3_msh.multiline.step.b3_msh_line_step import b3_msh_line_step
 from b3_msh.utils.logger import get_logger
 
 
@@ -45,7 +45,7 @@ def main():
     sections = []
     for z in z_values:
         logger.info(f"Processing section at z={z}")
-        af = B3MshStep.process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
+        af = b3_msh_line_step.process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
         sections.append(af)
 
     logger.info("Creating new MultiBlock mesh")

@@ -1,4 +1,4 @@
-from .step.B3MshLineStep import B3MshLineStep as B3MshStep
+from b3_msh.multiline.step.b3_msh_line_step import b3_msh_line_step
 
 
 def blade_process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config):
@@ -6,6 +6,6 @@ def blade_process_sections(logger, mesh, z_sections, chordwise_mesh, webs_config
     logger.info("Processing sections")
     sections = []
     for z in z_sections:
-        af = B3MshStep.process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
+        af = b3_msh_line_step.process_section_from_mesh(mesh, z, chordwise_mesh, webs_config, logger)
         sections.append(af)
     return sections

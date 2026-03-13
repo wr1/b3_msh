@@ -2,17 +2,17 @@ from unittest.mock import Mock, patch
 
 import numpy as np
 
-from b3_msh.multiline.step.B3MshLineStep import B3MshLineStep
+from b3_msh.multiline.step.b3_msh_line_step import b3_msh_line_step
 
 
 def test_b3msh_step_attributes():
-    """Test B3MshLineStep class attributes."""
-    assert B3MshLineStep.workdir_key == "workdir"
-    assert len(B3MshLineStep.input_files) == 1
-    assert B3MshLineStep.input_files[0].name == "b3_geo/lm1_mesh.vtp"
-    assert B3MshLineStep.input_files[0].non_empty
-    assert B3MshLineStep.output_files == ["b3_msh/lm2.vtp"]
-    assert set(B3MshLineStep.dependent_sections) == {
+    """Test b3_msh_line_step class attributes."""
+    assert b3_msh_line_step.workdir_key == "workdir"
+    assert len(b3_msh_line_step.input_files) == 1
+    assert b3_msh_line_step.input_files[0].name == "b3_geo/lm1_mesh.vtp"
+    assert b3_msh_line_step.input_files[0].non_empty
+    assert b3_msh_line_step.output_files == ["b3_msh/lm2.vtp"]
+    assert set(b3_msh_line_step.dependent_sections) == {
         "geometry",
         "airfoils",
         "structure",
@@ -21,8 +21,8 @@ def test_b3msh_step_attributes():
 
 
 def test_b3msh_step_execute():
-    """Test B3MshLineStep _execute method with mocked dependencies."""
-    step = object.__new__(B3MshLineStep)
+    """Test b3_msh_line_step _execute method with mocked dependencies."""
+    step = object.__new__(b3_msh_line_step)
     step.config_path = "/tmp/config.yml"
     # Mock config
     mock_config = {
@@ -63,11 +63,11 @@ def test_b3msh_step_execute():
     step.process_section_from_mesh = Mock(return_value=mock_af)
     # Mock pv.read
     with (
-        patch("b3_msh.multiline.step.B3MshLineStep.pv.read", return_value=mock_mesh) as mock_read,
-        patch("b3_msh.multiline.step.B3MshLineStep.pv.MultiBlock") as mock_multiblock,
+        patch("b3_msh.multiline.step.b3_msh_line_step.pv.read", return_value=mock_mesh) as mock_read,
+        patch("b3_msh.multiline.step.b3_msh_line_step.pv.MultiBlock") as mock_multiblock,
         patch("pathlib.Path.exists", return_value=True),
-        patch("b3_msh.multiline.step.B3MshLineStep.pv.merge", return_value=mock_mesh) as mock_merge,
-        patch("b3_msh.multiline.step.B3MshLineStep.pv.PolyData.save", Mock()) as mock_poly_save,
+        patch("b3_msh.multiline.step.b3_msh_line_step.pv.merge", return_value=mock_mesh) as mock_merge,
+        patch("b3_msh.multiline.step.b3_msh_line_step.pv.PolyData.save", Mock()) as mock_poly_save,
     ):
         mock_mb_instance = Mock()
         mock_multiblock.return_value = mock_mb_instance
@@ -83,7 +83,7 @@ def test_b3msh_step_execute():
 
 def test_merge_meshes_with_missing_arrays():
     """Test that _merge_and_save_mesh adds missing cell arrays with zeros."""
-    step = object.__new__(B3MshLineStep)
+    step = object.__new__(b3_msh_line_step)
     step.logger = Mock()
     # Create mock meshes
     mesh1 = Mock()
@@ -116,8 +116,8 @@ def test_merge_meshes_with_missing_arrays():
     merged_mesh.cell_data = {}
     merged_mesh.point_data = {}
     with (
-        patch("b3_msh.multiline.step.B3MshLineStep.pv.merge", return_value=merged_mesh) as mock_merge,
-        patch("b3_msh.multiline.step.B3MshLineStep.pv.PolyData") as mock_poly_class,
+        patch("b3_msh.multiline.step.b3_msh_line_step.pv.merge", return_value=merged_mesh) as mock_merge,
+        patch("b3_msh.multiline.step.b3_msh_line_step.pv.PolyData") as mock_poly_class,
         patch("pathlib.Path") as mock_path,
     ):
         mock_poly = Mock()

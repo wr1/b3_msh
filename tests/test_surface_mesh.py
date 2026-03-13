@@ -3,17 +3,17 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 
-from b3_msh.surface.step.B3MshSurfaceStep import B3MshSurfaceStep
+from b3_msh.surface.step.b3_msh_surface_step import b3_msh_surface_step
 
 
 def test_surface_step_attributes():
-    """Test B3MshSurfaceStep class attributes."""
-    assert B3MshSurfaceStep.workdir_key == "workdir"
-    assert len(B3MshSurfaceStep.input_files) == 1
-    assert B3MshSurfaceStep.input_files[0].name == "b3_geo/lm1_mesh3d.vtp"
-    assert B3MshSurfaceStep.input_files[0].non_empty
-    assert B3MshSurfaceStep.output_files == ["b3_msh/lm2_surface_mesh.vtp"]
-    assert set(B3MshSurfaceStep.dependent_sections) == {
+    """Test b3_msh_surface_step class attributes."""
+    assert b3_msh_surface_step.workdir_key == "workdir"
+    assert len(b3_msh_surface_step.input_files) == 1
+    assert b3_msh_surface_step.input_files[0].name == "b3_geo/lm1_mesh3d.vtp"
+    assert b3_msh_surface_step.input_files[0].non_empty
+    assert b3_msh_surface_step.output_files == ["b3_msh/lm2_surface_mesh.vtp"]
+    assert set(b3_msh_surface_step.dependent_sections) == {
         "geometry",
         "airfoils",
         "structure",
@@ -22,8 +22,8 @@ def test_surface_step_attributes():
 
 
 def test_surface_step_execute():
-    """Test B3MshSurfaceStep _execute method with mocked dependencies."""
-    step = object.__new__(B3MshSurfaceStep)
+    """Test b3_msh_surface_step _execute method with mocked dependencies."""
+    step = object.__new__(b3_msh_surface_step)
     step.config_path = "/tmp/config.yml"
     # Mock config with mesh3d
     mock_config = {
@@ -72,7 +72,7 @@ def test_surface_step_execute():
     step.process_section_from_mesh = Mock(return_value=mock_af)
     # Mock pv.read and PolyData
     with (
-        patch("b3_msh.surface.step.B3MshSurfaceStep.pv.read", return_value=mock_mesh) as mock_read,
+        patch("b3_msh.surface.step.b3_msh_surface_step.pv.read", return_value=mock_mesh) as mock_read,
         patch("pyvista.PolyData") as mock_poly_class,
         patch("pathlib.Path.exists", return_value=True),
     ):
@@ -96,7 +96,7 @@ def test_surface_step_execute():
 
 def test_surface_step_no_mesh3d():
     """Test that surface step fails without mesh3d."""
-    step = object.__new__(B3MshSurfaceStep)
+    step = object.__new__(b3_msh_surface_step)
     step.config = {
         "workdir": "/tmp/test",
         "geometry": {
@@ -147,12 +147,12 @@ def test_point_data_propagation():
     sections[0].current_t = np.array([0.0, 0.5, 1.0])
     sections[1].current_t = np.array([0.1, 0.6, 1.1])
 
-    step = object.__new__(B3MshSurfaceStep)
+    step = object.__new__(b3_msh_surface_step)
     step.logger = Mock()
     output_path = Mock()
 
     # Mock pv.PolyData to capture point_data assignment
-    with patch("b3_msh.surface.step.B3MshSurfaceStep.pv.PolyData") as mock_poly_class:
+    with patch("b3_msh.surface.step.b3_msh_surface_step.pv.PolyData") as mock_poly_class:
         mock_poly = Mock()
         mock_poly_class.return_value = mock_poly
         mock_poly.n_points = 6
